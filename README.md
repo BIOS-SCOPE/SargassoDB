@@ -1,2 +1,3 @@
 # SargassoDB
-data repository for BIOS-SCOPE
+
+This is the private data repository for the BIOS-SCOPE team.
