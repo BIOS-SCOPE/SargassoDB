@@ -5,9 +5,6 @@ from pydantic import BaseModel, Field
 
 class AsvMetadataBase(BaseModel):
     name: str
-    dada2name: str | None = Field(
-        default=None, title="dada2name", max_length=300
-    )
     sequence: str
     tax_kingdom: str | None = Field(
         default=None, title="tax_kingdom", max_length=300
@@ -46,8 +43,12 @@ class AsvMetadata(AsvMetadataBase):
 class AsvSampleBase(BaseModel):
     data_type: str
     data_url: str
+    sample_name: str
     fwd_primer: str | None
     rev_primer: str | None
+    dada2name: str | None = Field(
+        default=None, title="dada2name", max_length=500
+    )
 
 
 class AsvSampleCreate(AsvSampleBase):
@@ -70,6 +71,7 @@ class NiskinBase(BaseModel):
     date_time_triggered: datetime.datetime
     depth_triggered: float
     nominal_depth: float
+    temperature: float
 
 class NiskinCreate(NiskinBase):
     pass
@@ -86,9 +88,12 @@ class Niskin(NiskinBase):
 
 
 class CastBase(BaseModel):
-    short_name: str
     cast_number: int
     cast_time: datetime.date
+    mixed_layer_depth_value: float
+    mixed_layer_depth_method: str | None = Field(default='dens_T2',
+                                                 title="The method in which the mixed layer depth was measured",
+                                                 max_length=300)
 
 
 class CastCreate(CastBase):
@@ -112,10 +117,7 @@ class CruiseBase(BaseModel):
     station: str
     cruise_id: str
     program: str
-    mixed_layer_depth_value: float
-    mixed_layer_depth_method: str | None = Field(default='dens_T2',
-                                                 title="The method in which the mixed layer depth was measured",
-                                                 max_length=300)
+
 
 
 class CruiseCreate(CruiseBase):

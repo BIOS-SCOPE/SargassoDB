@@ -26,6 +26,7 @@ def load_cruise_data():
         session.add(db_cruise)
     session.commit()
 
+
 def load_cast_data():
     print('Loading cast data')
     df = pd.read_csv('test_data/casts.csv')
@@ -63,6 +64,7 @@ def load_niskin_data():
         db_niskin.location_gps_long = row['lonW']
         db_niskin.depth_triggered = row['Depth']
         db_niskin.nominal_depth = row['Nominal_Depth']
+        db_niskin.temperature = row['Temp']
         db_cast.niskins.append(db_niskin)
     session.commit()
 
@@ -86,9 +88,56 @@ def load_asv_metadata():
     session.commit()
 
 
+def load_asv_samples():
+    print('Loading ASV sample names')
+    df = pd.read_csv('test_data/asv_samples.csv')
+    session = Session()
+    for index, row in df.iterrows():
+        #find the niskin by master bottle file
+        db_niskin = session.query(models.Niskin).filter(models.Niskin.bottle_id == row['MasterBottlefileID']).first()
+        #find the cast by the niskin id
+        db_cast = db_niskin.cast.mixed_layer_depth_value = row['MLD_densT2']
+
+        db_asv_sample = models.AsvSample()
+        db_asv_sample.dada2name = row['dada2name']
+        db_asv_sample.sample_name = row['sample_name']
+        db_asv_sample.niskin = db_niskin
+        session.add(db_asv_sample)
+    session.commit()
+
+
+def load_rel_abundances():
+    print('Loading ASV relative abundances')
+    df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+    long_format = pd.melt(df, id_vars=['short_name', 'seqs'], var_name= 'sample_name', value_vars=df.columns[2:])
+    session = Session()
+    counter = 0
+    for index, row in long_format.iterrows():
+        db_asv_sample = session.query(models.AsvSample).filter(models.AsvSample.sample_name == row['sample_name']).first()
+        #TODO this is going to be a horror show for speed, so need a better way to find the sequences
+        db_asv_metadata = session.query(models.AsvMetadata).filter(models.AsvMetadata.sequence == row['seqs']).first()
+
+        db_rel_abundance = models.AsvRelativeAbundance()
+        db_rel_abundance.abundance = row['value']
+        db_rel_abundance.asv_sample = db_asv_sample
+        db_rel_abundance.asv_metadata = db_asv_metadata
+        session.add(db_rel_abundance)
+        counter += 1
+
+        if counter % 10000 ==0:
+            session.commit()
+            print(f'Committed {counter} records')
+    session.commit()
+    print(f'Committed {counter} records')
+
+
+
+
 
 if __name__ == "__main__":
     load_asv_metadata()
     load_cruise_data()
     load_cast_data()
     load_niskin_data()
+    load_asv_samples()
+    load_rel_abundances()
