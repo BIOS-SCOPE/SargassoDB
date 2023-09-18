@@ -88,4 +88,6 @@ def create_asv_metadata(db: Session, asv_metadata: schemas.AsvMetadataCreate):
     return db_asv_metadata
 
 
-
+def get_niskin_by_depth_range(db: Session, depth_1: int, depth_2: int, skip: int = 0, limit: int = 100):
+    return db.query(models.Niskin).filter(models.Niskin.depth_triggered >= depth_1,
+                                                models.Niskin.depth_triggered <= depth_2).offset(skip).limit(limit).all()

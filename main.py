@@ -99,6 +99,13 @@ def read_niskin_by_master_bottle_id(master_bottle_file_id: int, db: Session = De
         raise HTTPException(status_code=404, detail="Niskin not found")
     return db_niskin
 
+@app.get('/niskins/{depth_1}/{depth_2}', response_model=list[schemas.Niskin])
+def read_niskins_by_depth_range(depth_1: int, depth_2: int, db: Session = Depends(get_db)):
+    db_niskins = crud.get_niskin_by_depth_range(db, depth_1=depth_1, depth_2=depth_2)
+    if not db_niskins:
+        raise HTTPException(status_code=404, detail=f"Niskins not found between depths {depth_1} and {depth_2}")
+    return db_niskins
+
 
 @app.post("/niskins/{niskin_id}/asv_samples/", response_model=schemas.AsvSample)
 def create_asv_sample_for_niskin(

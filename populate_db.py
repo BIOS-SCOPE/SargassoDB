@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, time
 import models
+from tqdm import tqdm
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
@@ -45,7 +46,7 @@ def load_niskin_data():
     print('Loading niskin data')
     df = pd.read_csv('test_data/niskin_data_2023-09-13.csv', low_memory=False)
     session = Session()
-    for index, row in df.iterrows():
+    for index, row in tqdm(df.iterrows()):
         db_cruise = session.query(models.Cruise).filter(models.Cruise.cruise_id == row['cruise_id']).first()
         db_cast = session.query(models.Cast).filter(models.Cast.cruise_id == db_cruise.id,
                                                     models.Cast.cast_number==row['cast_number']).first()
@@ -68,11 +69,12 @@ def load_niskin_data():
         db_cast.niskins.append(db_niskin)
     session.commit()
 
+
 def load_asv_metadata():
     print('Loading ASV metadata')
     df = pd.read_csv('test_data/bats49month_taxonomy_combonames_May_28_2021.csv')
     session = Session()
-    for index, row in df.iterrows():
+    for index, row in tqdm(df.iterrows()):
 
         db_asv_metadata = models.AsvMetadata()
         db_asv_metadata.name = row['name']
@@ -107,31 +109,47 @@ def load_asv_samples():
 
 
 def load_rel_abundances():
-    print('Loading ASV relative abundances')
-    df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+
+    #df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+    df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
+
+    #work out the sample ids first to only have to do it once
+    seq_mapping = {}
+    session = Session()
+    print('Finding mappings from seqs to metadata objects')
+    for seq in tqdm(df.seqs):
+        db_asv_metadata = session.query(models.AsvMetadata).filter(models.AsvMetadata.sequence == seq).first()
+        seq_mapping[seq] = db_asv_metadata.id
+
+    print('Finding mappings from sample names to sample objects')
+    sample_name_mapping = {}
+    for sample_name in tqdm(df.columns[2:]):
+        db_asv_sample = session.query(models.AsvSample).filter(models.AsvSample.sample_name == sample_name).first()
+        if db_asv_sample:
+            sample_name_mapping[sample_name] = db_asv_sample.id
+        else:
+            print(f'Sample name {sample_name} does not appear to have a sample associated with it')
+
     long_format = pd.melt(df, id_vars=['short_name', 'seqs'], var_name= 'sample_name', value_vars=df.columns[2:])
     session = Session()
     counter = 0
-    for index, row in long_format.iterrows():
-        db_asv_sample = session.query(models.AsvSample).filter(models.AsvSample.sample_name == row['sample_name']).first()
-        #TODO this is going to be a horror show for speed, so need a better way to find the sequences
-        db_asv_metadata = session.query(models.AsvMetadata).filter(models.AsvMetadata.sequence == row['seqs']).first()
+    print('Loading ASV relative abundances')
+    for index, row in tqdm(long_format.iterrows()):
 
         db_rel_abundance = models.AsvRelativeAbundance()
         db_rel_abundance.abundance = row['value']
-        db_rel_abundance.asv_sample = db_asv_sample
-        db_rel_abundance.asv_metadata = db_asv_metadata
-        session.add(db_rel_abundance)
-        counter += 1
 
-        if counter % 10000 ==0:
+        try:
+            db_rel_abundance.asv_sample_id = sample_name_mapping[row['sample_name']]
+            db_rel_abundance.asv_metadata_id = seq_mapping[row['seqs']]
+            session.add(db_rel_abundance)
+            counter += 1
+        except KeyError:
+            print(f"No entry found for {row['seqs']} and/or {row['sample_name']} in the mapping files")
+        if counter % 100000 ==0:
             session.commit()
-            print(f'Committed {counter} records')
     session.commit()
     print(f'Committed {counter} records')
-
-
-
 
 
 if __name__ == "__main__":

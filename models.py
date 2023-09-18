@@ -38,7 +38,7 @@ class Niskin(Base):
     niskin_number = Column(Integer)
     location_gps_lat = Column(Float)
     location_gps_long = Column(Float)
-    date_time_closed = Column(DateTime)
+    date_time_triggered = Column(DateTime)
     depth_triggered = Column(Float)
     nominal_depth = Column(Integer)
     temperature = Column(Float)

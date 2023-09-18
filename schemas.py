@@ -68,10 +68,11 @@ class NiskinBase(BaseModel):
     old_bottle_id: str
     location_gps_lat: float
     location_gps_long: float
-    date_time_triggered: datetime.datetime
+    date_time_triggered: datetime.datetime | None
     depth_triggered: float
     nominal_depth: float
     temperature: float
+
 
 class NiskinCreate(NiskinBase):
     pass
