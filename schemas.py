@@ -3,7 +3,36 @@ import datetime
 from pydantic import BaseModel, Field
 
 
+class AsvRelativeAbundanceBase(BaseModel):
+    id: int
+    asv_metadata_id: int
+    asv_sample_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class AsvRelativeAbundanceCreate(AsvRelativeAbundanceBase):
+    pass
+
+
+class AsvRelativeAbundance(AsvRelativeAbundanceBase):
+    abundance: float | None
+
+
+
 class AsvMetadataBase(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class AsvMetadataCreate(AsvMetadataBase):
+    pass
+
+
+class AsvMetadata(AsvMetadataBase):
     name: str
     sequence: str
     tax_kingdom: str | None = Field(
@@ -29,26 +58,14 @@ class AsvMetadataBase(BaseModel):
     )
 
 
-class AsvMetadataCreate(AsvMetadataBase):
-    pass
-
-
-class AsvMetadata(AsvMetadataBase):
+class AsvSampleBase(BaseModel):
     id: int
+    niskin_id: int
+
+    asv_rel_abundances: list[AsvRelativeAbundance] = []
 
     class Config:
         orm_mode = True
-
-
-class AsvSampleBase(BaseModel):
-    data_type: str
-    data_url: str
-    sample_name: str
-    fwd_primer: str | None
-    rev_primer: str | None
-    dada2name: str | None = Field(
-        default=None, title="dada2name", max_length=500
-    )
 
 
 class AsvSampleCreate(AsvSampleBase):
@@ -56,29 +73,17 @@ class AsvSampleCreate(AsvSampleBase):
 
 
 class AsvSample(AsvSampleBase):
-    id: int
-    niskin_id: int
-
-    class Config:
-        orm_mode = True
+    data_type: str | None
+    data_url: str | None
+    sample_name: str | None
+    fwd_primer: str | None
+    rev_primer: str | None
+    dada2name: str | None = Field(
+        default=None, title="dada2name", max_length=500
+    )
 
 
 class NiskinBase(BaseModel):
-    bottle_id: int
-    old_bottle_id: str
-    location_gps_lat: float
-    location_gps_long: float
-    date_time_triggered: datetime.datetime | None
-    depth_triggered: float
-    nominal_depth: float
-    temperature: float
-
-
-class NiskinCreate(NiskinBase):
-    pass
-
-
-class Niskin(NiskinBase):
     id: int
     cast_id: int
 
@@ -88,10 +93,26 @@ class Niskin(NiskinBase):
         orm_mode = True
 
 
+
+class NiskinCreate(NiskinBase):
+    pass
+
+
+class Niskin(NiskinBase):
+    old_bottle_id: str | None
+    bottle_id: int | None
+    location_gps_lat: float | None
+    location_gps_long: float | None
+    date_time_triggered: datetime.datetime | None
+    depth_triggered: float | None
+    nominal_depth: float | None
+    temperature: float | None
+
+
 class CastBase(BaseModel):
-    cast_number: int
-    cast_time: datetime.date
-    mixed_layer_depth_value: float
+    cast_number: int | None
+    cast_date: datetime.date | None
+    mixed_layer_depth_value: float | None
     mixed_layer_depth_method: str | None = Field(default='dens_T2',
                                                  title="The method in which the mixed layer depth was measured",
                                                  max_length=300)
@@ -111,13 +132,13 @@ class Cast(CastBase):
 
 
 class CruiseBase(BaseModel):
-    departure_date: datetime.date
-    return_date: datetime.date
-    target_lat: float
-    target_long: float
-    station: str
-    cruise_id: str
-    program: str
+    departure_date: datetime.date | None
+    return_date: datetime.date | None
+    target_lat: float | None
+    target_long: float | None
+    station: str | None
+    cruise_id: str | None
+    program: str | None
 
 
 

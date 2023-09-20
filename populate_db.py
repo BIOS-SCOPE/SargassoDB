@@ -110,8 +110,8 @@ def load_asv_samples():
 
 def load_rel_abundances():
 
-    #df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
-    df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
+    df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+    #df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
 
     #work out the sample ids first to only have to do it once
     seq_mapping = {}
