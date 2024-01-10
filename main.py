@@ -1,16 +1,22 @@
-
-from fastapi import FastAPI, HTTPException, Depends
+import sqlalchemy
+import pandas as pd
+from fastapi import FastAPI, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from datetime import datetime
 import models
 import schemas
 import crud
+from io import StringIO
 
 from database import SessionLocal, engine
+
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-
+templates = Jinja2Templates(directory="templates")
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -20,9 +26,40 @@ def get_db():
         db.close()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+
+
+# @app.get("/")
+# async def root():
+ #    return {"message": "Hello World"}
+
+@app.get("/",response_class=HTMLResponse)
+
+
+
+
+async def home(request: Request):
+    message = "Welcome to the BIOS-SCOPE data website"
+
+    # get and format current local date and time
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    testin = read_niskin(niskin_id= 1, db= SessionLocal())
+    testin2 = read_niskin(niskin_id=1, db=SessionLocal())
+    #testin2 = sample_depths()
+    #testin = Niskin.__table__.columns
+    return templates.TemplateResponse(
+        "home.html",
+        {
+            "request": request,
+            "message": message,
+            "current_time": current_time,
+            "testin": testin,
+            "testin2":testin2
+
+
+        }
+)
+
 
 
 @app.get("/hello/{name}")
@@ -89,8 +126,11 @@ def read_niskin(niskin_id: int, db: Session = Depends(get_db)):
     db_niskin = crud.get_niskin(db, niskin_id=niskin_id)
     if db_niskin is None:
         raise HTTPException(status_code=404, detail="Niskin not found")
-    return db_niskin
-
+    #query = print([db_niskin.bottle_id])
+    #return db_niskin
+    return db_niskin.__table__.c.keys() #works
+    #return db_niskin.__table__.indexes #works
+    #return query
 
 @app.get("/niskins/{master_bottle_file_id}", response_model=schemas.Niskin)
 def read_niskin_by_master_bottle_id(master_bottle_file_id: int, db: Session = Depends(get_db)):
@@ -126,13 +166,16 @@ def read_asv_sample(asv_sample_id: int, db: Session = Depends(get_db)):
     return db_asv_sample
 
 
-@app.post("/asv_metadatas/", response_model=schemas.AsvMetadata)
-def create_asv_metadatas(asv_metadata: schemas.AsvMetadataCreate, db: Session = Depends(get_db)):
-    return crud.create_asv_metadata(db=db, asv_metadata=asv_metadata)
 
 
-@app.get("/asv_metadatas/", response_model=list[schemas.Cruise])
+
+@app.get("/asv_metadatas/", response_model=list[schemas.AsvMetadata])
 def read_asv_metadatas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     asv_metadatas = crud.get_asv_metadatas(db, skip=skip, limit=limit)
     return asv_metadatas
 
+
+def sample_depths():
+    dfdepth = pd.read_csv('test_data/niskin_data_2023-09-13.csv',usecols=[9])
+    dfdepthu = dfdepth.drop_duplicates()
+    return dfdepthu[0:11]
