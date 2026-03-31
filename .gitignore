@@ -9,7 +9,7 @@ htmlcov/
 .pytest_cache/
 
 # Database
-instance/site.db
+sql_app.db
 
 # Data files (some too large, just hide the full folder)
 #test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv
