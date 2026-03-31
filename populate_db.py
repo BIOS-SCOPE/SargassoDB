@@ -1,10 +1,10 @@
 import pandas as pd
-from sqlalchemy import create_engine, inspect, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, time
 import models
 from tqdm import tqdm
-import pdb
+
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
@@ -75,7 +75,7 @@ def load_asv_metadata():
     df = pd.read_csv('test_data/bats49month_taxonomy_combonames_May_28_2021.csv')
     session = Session()
     for index, row in tqdm(df.iterrows()):
-        #pdb.set_trace()
+
         db_asv_metadata = models.AsvMetadata()
         db_asv_metadata.name = row['name']
         db_asv_metadata.sequence = row['sequence']
@@ -109,9 +109,9 @@ def load_asv_samples():
 
 
 def load_rel_abundances():
-	#KL working here, this fill is too big for GitHub so have to get it from elsewhere
-    #df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
-    df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
+
+    df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+    #df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
 
     #work out the sample ids first to only have to do it once
     seq_mapping = {}
