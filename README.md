@@ -1,5 +1,7 @@
 # SargassoDB
 
+## updated 31 March 2026 (Krista)
+While this is an older repository, it holds code that is able to generate a database (e.g., it works). Move forward with this. Work in a separate branch: KristaWorking
 ## updated 13 March 2026 (Krista)
 This is deprecated, use bioscope-portal instead.
 
