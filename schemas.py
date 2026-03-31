@@ -2,6 +2,12 @@ import datetime
 
 from pydantic import BaseModel, Field
 
+#KL 3/30/2026 added and changed from name: int | None and so on to this syntax:
+#Union[int,None]
+#This is a change in the newer Python, which I don't have yet so I put 
+# in this hack and can change Python version later 
+from typing import Union
+
 
 class AsvRelativeAbundanceBase(BaseModel):
     id: int
@@ -17,8 +23,8 @@ class AsvRelativeAbundanceCreate(AsvRelativeAbundanceBase):
 
 
 class AsvRelativeAbundance(AsvRelativeAbundanceBase):
-    abundance: float | None
-
+    abundance: Union[float, None] #KL messing around
+    
 
 
 class AsvMetadataBase(BaseModel):
@@ -35,25 +41,25 @@ class AsvMetadataCreate(AsvMetadataBase):
 class AsvMetadata(AsvMetadataBase):
     name: str
     sequence: str
-    tax_kingdom: str | None = Field(
+    tax_kingdom: Union[str, None] = Field(
         default=None, title="tax_kingdom", max_length=300
     )
-    tax_phylum: str | None = Field(
+    tax_phylum: Union[str ,None] = Field(
         default=None, title="tax_phylum", max_length=300
     )
-    tax_class: str | None = Field(
+    tax_class: Union[str ,None] = Field(
         default=None, title="tax_class", max_length=300
     )
-    tax_order: str | None = Field(
+    tax_order: Union[str ,None] = Field(
         default=None, title="tax_order", max_length=300
     )
-    tax_family: str | None = Field(
+    tax_family: Union[str ,None] = Field(
         default=None, title="tax_family", max_length=300
     )
-    tax_genus: str | None = Field(
+    tax_genus: Union[str ,None] = Field(
         default=None, title="tax_genus", max_length=300
     )
-    tax_comboname: str | None = Field(
+    tax_comboname: Union[str, None] = Field(
         default=None, title="tax_comboname", max_length=1000
     )
 
@@ -73,12 +79,12 @@ class AsvSampleCreate(AsvSampleBase):
 
 
 class AsvSample(AsvSampleBase):
-    data_type: str | None
-    data_url: str | None
-    sample_name: str | None
-    fwd_primer: str | None
-    rev_primer: str | None
-    dada2name: str | None = Field(
+    data_type:  Union[str, None]
+    data_url: Union[str, None]
+    sample_name: Union[str, None]
+    fwd_primer: Union[str, None]
+    rev_primer: Union[str, None]
+    dada2name: Union[str, None] = Field(
         default=None, title="dada2name", max_length=500
     )
 
@@ -99,21 +105,21 @@ class NiskinCreate(NiskinBase):
 
 
 class Niskin(NiskinBase):
-    old_bottle_id: str | None
-    bottle_id: int | None
-    location_gps_lat: float | None
-    location_gps_long: float | None
-    date_time_triggered: datetime.datetime | None
-    depth_triggered: float | None
-    nominal_depth: float | None
-    temperature: float | None
+    old_bottle_id: Union[str, None]
+    bottle_id: Union[int , None]
+    location_gps_lat: Union[float, None]
+    location_gps_long: Union[float, None]
+    date_time_triggered: Union[datetime.datetime , None]
+    depth_triggered: Union[float, None]
+    nominal_depth: Union[float, None]
+    temperature: Union[float, None]
 
 
 class CastBase(BaseModel):
-    cast_number: int | None
-    cast_date: datetime.date | None
-    mixed_layer_depth_value: float | None
-    mixed_layer_depth_method: str | None = Field(default='dens_T2',
+    cast_number:Union[int , None]
+    cast_date: Union[datetime.datetime , None]
+    mixed_layer_depth_value: Union[float, None]
+    mixed_layer_depth_method: Union[str, None] = Field(default='dens_T2',
                                                  title="The method in which the mixed layer depth was measured",
                                                  max_length=300)
 
@@ -132,13 +138,13 @@ class Cast(CastBase):
 
 
 class CruiseBase(BaseModel):
-    departure_date: datetime.date | None
-    return_date: datetime.date | None
-    target_lat: float | None
-    target_long: float | None
-    station: str | None
-    cruise_id: str | None
-    program: str | None
+    departure_date: Union[datetime.datetime , None]
+    return_date: Union[datetime.datetime , None]
+    target_lat: Union[float, None]
+    target_long: Union[float, None]
+    station: Union[str, None]
+    cruise_id: Union[str, None]
+    program: Union[str, None]
 
 
 

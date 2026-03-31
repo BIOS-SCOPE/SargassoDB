@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Database
+instance/site.db
+
+# Data files (some too large, just hide the full folder)
+#test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv
+test_data/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+.claude/
+.kiro/
+
+# Node
+frontend/node_modules/
+frontend/.next/
