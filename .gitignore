@@ -23,6 +23,7 @@ test_data/
 .vscode/
 .claude/
 .kiro/
+.ipynb_checkpoints/
 
 # Node
 frontend/node_modules/
