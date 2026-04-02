@@ -1,5 +1,8 @@
 # SargassoDB (branch KristaWorking)
 
+## 2 April 2026
+Have a basic query working. I think I am ready to start gathering up real BIOS-SCOPE data and setting up a database that can track what has been done over the years.
+
 ## updated 30 March 2026 (Krista)
 Actually this is useful as I can actually get this database to run which I could not do with the newer code.\
 Keep this and move on from here.
