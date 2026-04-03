@@ -3,8 +3,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, time
 import models
+<<<<<<< HEAD
 from tqdm import tqdm
 
+=======
+from tqdm import tqdm #will show progress bar as you move through a loop
+import pdb #use with pdb.set_trace()
+
+#KL working copy
+>>>>>>> d9e21dcf4c72af145b228863c0ab8d283daa76bf
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
@@ -109,8 +116,13 @@ def load_asv_samples():
 
 
 def load_rel_abundances():
+<<<<<<< HEAD
 
     df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+=======
+    df = pd.read_csv('test_data/mini_test_asv_rel_abundances.csv')
+    #KL working here, this fill is too big for GitHub so have to get it from elsewhere
+>>>>>>> d9e21dcf4c72af145b228863c0ab8d283daa76bf
     #df = pd.read_csv('test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv')
 
     #work out the sample ids first to only have to do it once
@@ -130,7 +142,11 @@ def load_rel_abundances():
         else:
             print(f'Sample name {sample_name} does not appear to have a sample associated with it')
 
+    #KL issue with the next line error is: id_vars are not in the DataFrame: ['short_name']
+    #pdb.set_trace()
+    #based on what I see in the mini file, just add short_name to the first column (the file from github has nothing labeling the first column)
     long_format = pd.melt(df, id_vars=['short_name', 'seqs'], var_name= 'sample_name', value_vars=df.columns[2:])
+    
     session = Session()
     counter = 0
     print('Loading ASV relative abundances')
