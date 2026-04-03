@@ -2,6 +2,7 @@
 
 ## 3 April 2026
 Make a different branch to move ahead as kristaWorking is messing around with existing code to understand it.
+So far, so good, I can merge two files (based on joining with fastq filename). Move on to searching in the discrete file for datatype
 
 ## 2 April 2026
 Have a basic query working. I think I am ready to start gathering up real BIOS-SCOPE data and setting up a database that can track what has been done over the years.
