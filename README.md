@@ -1,5 +1,8 @@
 # SargassoDB (branch movingAhead)
 
+## 5 April 2026
+Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scriots that are not being run in Jupyter notebook
+
 ## 3 April 2026
 Make a different branch to move ahead as kristaWorking is messing around with existing code to understand it.
 So far, so good, I can merge two files (based on joining with fastq filename). Move on to searching in the discrete file for datatype.
