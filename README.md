@@ -1,7 +1,7 @@
 # SargassoDB (branch movingAhead)
 
 ## 6 April 2026
-Have this ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt\
+Have this mostly ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt:
 
 ```bash
 venv\Scripts\activate

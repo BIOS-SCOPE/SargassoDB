@@ -24,6 +24,7 @@ class DiscreteInfo(Base):
     V1V2data = Column(String)
     V4data = Column(String)
     mtabData = Column(String)
+    mtabDataUntargeted = Column(String)
     
     #need this next row to get the nice output (other get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
     def __repr__(self):
@@ -76,3 +77,12 @@ class MetaboliteInfo(Base):
     def __repr__(self) -> str:
         return f"MetaboliteInfo(id={self.id!r}, bottleID={self.bottleID!r}, dataSource={self.dataSource!r})"
 
+
+class MtabUntargetedInfo(Base):
+    __tablename__ = 'metabolitesUntargeted'
+    id = Column(Integer, primary_key=True, index=True)
+    bottleID = Column(String)
+    dataSource = Column(String)
+    
+    def __repr__(self) -> str:
+        return f"MtabUntargetedInfo(id={self.id!r}, bottleID={self.bottleID!r}, dataSource={self.dataSource!r})"
