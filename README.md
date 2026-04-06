@@ -1,7 +1,7 @@
 # SargassoDB (branch movingAhead)
 
 ## 5 April 2026
-Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scriots that are not being run in Jupyter notebook
+Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scripts that are not being run in Jupyter notebook
 
 ## 3 April 2026
 Make a different branch to move ahead as kristaWorking is messing around with existing code to understand it.

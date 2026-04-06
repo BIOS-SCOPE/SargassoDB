@@ -15,9 +15,12 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 # create a session factory
 Session = sessionmaker(bind=engine)
 
-# create a declarative base
-Base = declarative_base()
 
-#Can I put this here?
-# create the database tables
-#Base.metadata.create_all(engine)
+# # create a session factory
+# SessionLocal = sessionmaker(bind=engine)
+# SessionLocal.configure(bind=engine)
+
+# create a declarative base
+#Base = declarative_base()
+
+
