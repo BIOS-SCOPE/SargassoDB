@@ -14,7 +14,7 @@ import pdb #use with set_trace()
 
 
 # create a SQLite database engine
-SQLALCHEMY_DATABASE_URL = "sqlite:///sargasso.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
 #this will end up creating a new database everytime, but I need this for testing right now
 #SQLALCHEMY_DATABASE_URL = f"sqlite:///../test_data/new_database_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
 # delete_db()
@@ -53,7 +53,7 @@ with contextlib.closing(engine.connect()) as con:
 # # insert some data, setup functions, one per data type
 def load_discrete_info():
     print('Loading discrete sample information')
-    data_dir = '../test_data/BIOS-SCOPE time series/'
+    data_dir = 'test_data/BIOS-SCOPE time series/'
     fName = 'BATS_BS_COMBINED_MASTER_mini.xlsx'
     #fName = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name='DATA'))
@@ -73,7 +73,7 @@ def load_discrete_info():
     
 def load_V4_sequencing_info():
     print('Loading V4 sequencing information')
-    data_dir = '../test_data/BIOS-SCOPE time series/'
+    data_dir = 'test_data/BIOS-SCOPE time series/'
     fName = 'V4_dada2_read_info_03052026.xlsx'
     df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
     #strip the @#%@#^$ spaces in headers
@@ -92,7 +92,7 @@ def load_V4_sequencing_info():
     
 def load_V1V2_sequencing_info():
     print('Loading V1V2 sequencing information')
-    data_dir = '../test_data/BIOS-SCOPE time series/'
+    data_dir = 'test_data/BIOS-SCOPE time series/'
     fName = 'V1V2_dada2_read_info_03052026.xlsx'
     df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),
                                    dtype={'Bottle ID':str,'Cruise':str,'Cast':str,'Depth':str}))
@@ -111,7 +111,7 @@ def load_V1V2_sequencing_info():
 
 def load_cyverse_info():
     print('Loading sequencing information')
-    dataDir = '../test_data/BIOS-SCOPE time series/'
+    dataDir = 'test_data/BIOS-SCOPE time series/'
     fName = 'files_shortList.txt'
     df = pd.read_csv(os.path.join(dataDir,fName),sep='\t',header=None,comment = '#')
 
@@ -130,7 +130,7 @@ def load_cyverse_info():
 
 def load_metabolite_info():
     print("Loading metabolite information from MetaboLights")
-    dataDir = '../test_data/'
+    dataDir = 'test_data/'
     # start with one dataset at MetaboLights --> MTBLS2356 is Longnecker et al.
     study_id = 'MTBLS2356'
     try:
@@ -186,6 +186,7 @@ def load_metabolite_info():
             session.add(db)
         session.commit()
     except:
+        print("MetaboLights did not allow connection, dummy data")
         session = Session()
         #pdb.set_trace()
         df = pd.DataFrame({'bottleID':['1033900707'],'dataSource':['MetaboLightsNotAvailable']})
@@ -194,9 +195,7 @@ def load_metabolite_info():
             db.bottleID = row['bottleID']
             db.dataSource = row['dataSource']
             session.add(db)
-        session.commit()
-    finally:
-        print("MetaboLights sometimes does not allow connection")
+        session.commit()       
         
 
 
@@ -206,4 +205,4 @@ if __name__ == "__main__":
     load_V1V2_sequencing_info()
     load_cyverse_info()
     load_discrete_info()
-    #load_metabolite_info()
+    load_metabolite_info()

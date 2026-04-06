@@ -1,96 +1,206 @@
-from sqlalchemy.orm import Session
-import models
-import schemas
+from sqlalchemy import create_engine, inspect, MetaData, Table
+from sqlalchemy.orm import sessionmaker, declarative_base
+import pandas as pd
+import os
+
+'''
+Now I need to update the database based on the links across tables in 
+the database
+Krista Longnecker, 6 April 2026
+'''
 
 
+#import database #cannot get this to work, skip for now
+##
+# create a SQLite database engine
+SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
+#this will end up creating a new database everytime, but I need this for testing right now
+#SQLALCHEMY_DATABASE_URL = f"sqlite:///../test_data/new_database_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+# delete_db()
 
-def get_cruise(db: Session, cruise_id: int):
-    return db.query(models.Cruise).filter(models.Cruise.id == cruise_id).first()
+#engine = create_engine(SQLALCHEMY_DATABASE_URL,echo=True)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-
-def get_cruises(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Cruise).offset(skip).limit(limit).all()
-
-
-def create_cruise(db: Session, cruise: schemas.CruiseCreate):
-    db_cruise = models.Cruise(**cruise.dict())
-    db.add(db_cruise)
-    db.commit()
-    db.refresh(db_cruise)
-    return db_cruise
+# create a session factory
+Session = sessionmaker(bind=engine)
 
 
-def get_cast(db: Session, cast_id: int):
-    return db.query(models.Cast).filter(models.Cast.id == cast_id).first()
+# # create a session factory
+# SessionLocal = sessionmaker(bind=engine)
+# SessionLocal.configure(bind=engine)
 
+# create a declarative base
+#Base = declarative_base()
 
-def get_casts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Cast).offset(skip).limit(limit).all()
-
-
-def create_cast(db: Session, cast: schemas.CastCreate, cruise_id: int):
-    db_cast = models.Cast(**cast.dict(), cruise_id=cruise_id)
-    db.add(db_cast)
-    db.commit()
-    db.refresh(db_cast)
-    return db_cast
-
-
-def get_niskin(db: Session, niskin_id: int):
-    return db.query(models.Niskin).filter(models.Niskin.id == niskin_id).first()
-
-
-def get_niskin_by_master_bottle_file_id(db: Session, master_bottle_file_id: int):
-    return db.query(models.Niskin).filter(models.Niskin.master_bottle_file_id == master_bottle_file_id).first()
-
-
-def get_niskins(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Niskin).offset(skip).limit(limit).all()
-
-
-def create_niskin(db: Session, niskin: schemas.NiskinCreate, cast_id: int):
-    db_niskin = models.Niskin(**niskin.dict(), cast_id=cast_id)
-    db.add(db_niskin)
-    db.commit()
-    db.refresh(db_niskin)
-    return db_niskin
-
-
-def get_asv_sample(db: Session, asv_sample_id: int):
-    return db.query(models.AsvSample).filter(models.AsvSample.id == asv_sample_id).first()
-
-
-def get_asv_samples(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.AsvSample).offset(skip).limit(limit).all()
-
-
-def create_asv_sample(db: Session, asv_sample: schemas.AsvSampleCreate, niskin_id: int):
-    db_asv_sample = models.AsvSample(**asv_sample.dict(), niskin_id=niskin_id)
-    db.add(db_asv_sample)
-    db.commit()
-    db.refresh(db_asv_sample)
-    return db_asv_sample
-
-
-def get_asv_metadata(db: Session, asv_metadata_id: int):
-    return db.query(models.AsvMetadata).filter(models.AsvMetadata.id == asv_metadata_id).first()
-
-
-def get_asv_metadatas(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.AsvMetadata).offset(skip).limit(limit).all()
+#Can I put this here?
+# create the database tables
+#models.Base.metadata.create_all(engine)
 
 
 
 
+metadata_obj = MetaData()
+metadata_obj.reflect(bind=engine)
 
-def create_asv_metadata(db: Session, asv_metadata: schemas.AsvMetadataCreate):
-    db_asv_metadata = models.AsvMetadata(**asv_metadata.dict())
-    db.add(db_asv_metadata)
-    db.commit()
-    db.refresh(db_asv_metadata)
-    return db_asv_metadata
+#reflect the tables so I can work on them
+user_seqV4 = Table('sequencingV4', metadata_obj, autoload_with=engine)
+user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
+#user_cy = Table('cyverse',metadata_obj,autoload_with=engine) #not using this 
+user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
+user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 
 
-def get_niskin_by_depth_range(db: Session, depth_1: int, depth_2: int, skip: int = 0, limit: int = 100):
-    return db.query(models.Niskin).filter(models.Niskin.depth_triggered >= depth_1,
-                                                models.Niskin.depth_triggered <= depth_2).offset(skip).limit(limit).all()
+#start with V4
+#start with V4
+print('working on linking the V4 data')
+
+# create a session factory
+Session = sessionmaker(bind=engine)
+session = Session()
+
+#see all of what is in table
+#session.query(SeqInfoV4).all()
+
+#updating...
+from sqlalchemy import update,select
+
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_seqV4.c.V4data)
+    .where(user_discrete.c.bottleID == user_seqV4.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(V4data=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()   
+    
+    
+#start with V1V2
+#start with V1V2
+print('working on linking the V1V2 data')
+    
+# create a session factory
+Session = sessionmaker(bind=engine)
+session = Session()
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_seqV1V2.c.V1V2data)
+    .where(user_discrete.c.bottleID == user_seqV1V2.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(V1V2data=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()
+
+
+
+
+# # see if this worked
+# #Base.metadata.create_all(engine)
+# print('check if this all worked (skipping metabolite data')
+
+# # Create a session
+# Session = sessionmaker(bind=engine)
+# session = Session()
+
+# from sqlalchemy import Table, Column, Integer, String, MetaData
+
+# metadata = MetaData()
+# users = Table('discrete', metadata,
+    # Column('id', Integer, primary_key=True),
+    # Column('bottleID', String),
+    # Column('cruise', String),
+    # Column('yyyymmdd',String),
+    # Column('V4data',String),
+    # Column('V1V2data',String),
+    # #Column('mtabData',String)
+              
+# )
+
+# #how to execute a query
+# stmt = select(users)
+# with engine.connect() as conn:
+    # rows = session.execute(stmt).all()
+    # table_data = [row._mapping for row in rows]
+    # df = pd.DataFrame(table_data)
+    # df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','V1V2data','V4data'])#,'mtabData'])
+    
+
+# #export the final result as a CSV file
+# df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')    
+# df_final = df    
+    
+    
+        
+ 
+    
+#finally the metabolite data
+#finally the metabolite data
+print('working on linking the metabolite data')
+
+# create a session factory
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_mtab.c.dataSource)
+    .where(user_discrete.c.bottleID == user_mtab.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(mtabData=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()
+    
+    
+# see if this worked (with all three, comment out while I cannot get to MetaboLights)
+print('check if this all worked')
+
+# Create a session
+Session = sessionmaker(bind=engine)
+session = Session()
+
+from sqlalchemy import Table, Column, Integer, String, MetaData
+
+metadata = MetaData()
+users = Table('discrete', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('bottleID', String),
+    Column('cruise', String),
+    Column('yyyymmdd',String),
+    Column('V4data',String),
+    Column('V1V2data',String),
+    Column('mtabData',String)
+              
+)
+
+#how to execute a query
+stmt = select(users)
+with engine.connect() as conn:
+    rows = session.execute(stmt).all()
+    table_data = [row._mapping for row in rows]
+    df = pd.DataFrame(table_data)
+    df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','V1V2data','V4data','mtabData'])
+
+#export the final result as a CSV file
+df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')    
+#df_final = df  
+

@@ -1,5 +1,15 @@
 # SargassoDB (branch movingAhead)
 
+## 6 April 2026
+Have this ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt\
+
+```bash
+venv\Scripts\activate
+pip install -r requirements.txt 
+python populate_db.py
+crud.py
+```
+
 ## 5 April 2026
 Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scripts that are not being run in Jupyter notebook
 
@@ -22,7 +32,7 @@ Keep this and move on from here.
 Some basic steps:
 ```bash
 venv\Scripts\activate
-pip install -r requirements.txt (only once)
+pip install -r requirements.txt 
 set SARGASSODB_CONFIG_FILE=%cd%\sargassodb\config.json (not sure if this is used here, but cannot hurt)
 python populate_db.py (will take a while)
 
