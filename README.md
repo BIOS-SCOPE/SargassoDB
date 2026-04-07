@@ -1,7 +1,8 @@
-# SargassoDB (branch movingAhead)
+# SargassoDB (main)
 
 ## 7 April 2026
 I can use checkMatch.ipynb to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
+First though, pull this code into the main branch (but leave the other two branches: kristaWorking and movingAhead)
 
 ## 6 April 2026
 Have this mostly ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt:
