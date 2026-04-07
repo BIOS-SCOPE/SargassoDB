@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, inspect, MetaData, Table
 from sqlalchemy.orm import sessionmaker, declarative_base
 import pandas as pd
 import os
+import pdb
 
 '''
 Now I need to update the database based on the links across tables in 
@@ -174,6 +175,7 @@ users = Table('discrete', metadata,
 #how to execute a query
 stmt = select(users)
 with engine.connect() as conn:
+    #pdb.set_trace()
     rows = session.execute(stmt).all()
     table_data = [row._mapping for row in rows]
     df = pd.DataFrame(table_data)

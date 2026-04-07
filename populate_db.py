@@ -230,24 +230,28 @@ def load_metaboliteUntargeted_info():
         # pull what I can from the sample information at MetaboLights
         #for the database this is all need (is there a sample...)
         sampleNames  = metadata_aboutSamples['Source Name']
-
+        
+        #Erin also had blanks and boooled samples, remove those and make a list (added 4/6/2026)
+        #Don't really want the extra steps, but that is how I can understand this
+        sampleList = [x for x in sampleNames if not x.startswith(('spool','sblank','smqblank'))]
+        sampleNames = pd.Series(sampleList)
+        
         #MetaboLights required samples to begin with a letter, I used 's' and need to strip that out 
         NewID_inMTBLS  = pd.to_numeric(sampleNames.str.strip('s')) 
 
         #convert the series into a dataframe:
         df = NewID_inMTBLS.reset_index() 
-            
-        #%run Kuj_MetabolightsData.py
-        
+        df.columns = ['index','bottleID'] #somehow lost column labels
+         
         session = Session()
         for index,row in tqdm(df.iterrows()):
-            db = models.MtabUntargeted()
-            db.bottleID = f"{row['Source Name']}"
+            db = models.MtabUntargetedInfo()
+            db.bottleID = f"{row['bottleID']}" #seems like there should be a btter way to do this
             db.dataSource = study_id 
             session.add(db)
         session.commit()
     except:
-        print("MetaboLights did not allow connection, dummy data")
+        print("MetaboLights did not allow connection OR some other error")
         session = Session()
         #pdb.set_trace()
         df = pd.DataFrame({'bottleID':['1033900707'],'dataSource':['MetaboLightsNotAvailable']})

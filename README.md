@@ -7,7 +7,7 @@ Have this mostly ready as scripts only (so much faster than using Jupyter notebo
 venv\Scripts\activate
 pip install -r requirements.txt 
 python populate_db.py
-crud.py
+python crud.py
 ```
 
 ## 5 April 2026
