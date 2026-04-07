@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, inspect, MetaData, Table
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import update,select
 import pandas as pd
 import os
 import pdb
@@ -27,57 +28,36 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
 
-
-
-
+#reflect the tables so I can work on them
 metadata_obj = MetaData()
 metadata_obj.reflect(bind=engine)
 
-#reflect the tables so I can work on them
-user_seqV4 = Table('sequencingV4', metadata_obj, autoload_with=engine)
+user_seqV4_16S = Table('sequencingV4_16S', metadata_obj, autoload_with=engine)
+user_seqV4_18S = Table('sequencingV4_18S', metadata_obj, autoload_with=engine)
 user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
 #user_cy = Table('cyverse',metadata_obj,autoload_with=engine) #not using this 
 user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
 user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
 
-#start with V4
-#start with V4
-print('working on linking the V4 data')
-
-# create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
-
+#
 #see all of what is in table (leave query here for future reference, not in use)
 #session.query(SeqInfoV4).all()
 
-from sqlalchemy import update,select
-
-# 1. Define the subquery to fetch a value from the second table
-scalar_subq = (
-    select(user_seqV4.c.V4data)
-    .where(user_discrete.c.bottleID == user_seqV4.c.bottleID)
-    .limit(1)
-    .scalar_subquery()
-)
-
-# 2. Use the subquery in the .values() clause of an update statement
-stmt = update(user_discrete).values(V4data=scalar_subq)
-
-#then execute the statement
-with engine.connect() as conn:
-    result = conn.execute(stmt)
-    conn.commit()   
-    
-    
-#then add the V1V2 data
-#then add the V1V2 data
-print('working on linking the V1V2 data')
+# link the V1V2 data
+# link the V1V2 data
+print('linking the V1V2 data')
     
 # create a session factory
 Session = sessionmaker(bind=engine)
 session = Session()
+
+# pdb.set_trace()
+# users = session.query(user_seqV1V2).all()
+# print(users)
+
+
+
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
     select(user_seqV1V2.c.V1V2data)
@@ -93,6 +73,66 @@ stmt = update(user_discrete).values(V1V2data=scalar_subq)
 with engine.connect() as conn:
     result = conn.execute(stmt)
     conn.commit()
+    
+    
+    
+
+#link the V4_16S
+#link the V4_16S
+print('working on linking the V4_16S data')
+
+# create a session factory
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_seqV4_16S.c.V4_16Sdata)
+    .where(user_discrete.c.bottleID == user_seqV4_16S.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(V4_16Sdata=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()   
+    
+
+
+#link the V4_18S
+#link the V4_18S
+print('working on linking the V4_18S data')
+
+# create a session factory
+Session = sessionmaker(bind=engine)
+session = Session()
+
+#see all of what is in table (leave query here for future reference, not in use)
+#session.query(SeqInfoV4).all()
+
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_seqV4_18S.c.V4_18Sdata)
+    .where(user_discrete.c.bottleID == user_seqV4_18S.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+#pdb.set_trace()
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(V4_18Sdata=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()       
+
 
 
     
@@ -166,7 +206,8 @@ users = Table('discrete', metadata,
     Column('bottleID', String),
     Column('cruise', String),
     Column('yyyymmdd',String),
-    Column('V4data',String),
+    Column('V4_16Sdata',String),
+    Column('V4_18Sdata',String),
     Column('V1V2data',String),
     Column('mtabData',String),
     Column('mtabDataUntargeted',String)              
@@ -180,7 +221,7 @@ with engine.connect() as conn:
     table_data = [row._mapping for row in rows]
     df = pd.DataFrame(table_data)
     #need to reorder the columns for this project, easier to read
-    df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','V1V2data','V4data','mtabData','mtabDataUntargeted'])
+    df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','V1V2data','V4_16Sdata','V4_18Sdata','mtabData','mtabDataUntargeted'])
 
 #export the final result as a CSV file
 df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')    

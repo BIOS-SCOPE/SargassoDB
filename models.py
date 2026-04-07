@@ -22,7 +22,8 @@ class DiscreteInfo(Base):
     yyyymmdd = Column(String)
     nominalDepth = Column(String)
     V1V2data = Column(String)
-    V4data = Column(String)
+    V4_16Sdata = Column(String)
+    V4_18Sdata = Column(String)
     mtabData = Column(String)
     mtabDataUntargeted = Column(String)
     
@@ -44,20 +45,34 @@ class SeqInfoV1V2(Base):
     
     def __repr__(self):
         return f"<SeqInfoV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
-    
-class SeqInfoV4(Base):
-    __tablename__ = 'sequencingV4'
+
+class SeqInfoV4_18S(Base):
+    __tablename__ = 'sequencingV4_18S'
     id = Column(Integer, primary_key=True, index=True)
     bottleID = Column(String)
     cast = Column(String)
     NominalDepth = Column(String)
     filename = Column(String)
-    V4data = Column(String)
+    V4_18Sdata = Column(String)
     #not sure how to do this next bit yet
     #casts = relationship('Cast', back_populates='cruise')
     
     def __repr__(self) -> str:
-        return f"SeqInfoV4(id={self.id!r}, name={self.bottleID!r}, V4data={self.V4data!r})"
+        return f"SeqInfoV4_18S(id={self.id!r}, name={self.bottleID!r}, V4_18Sdata={self.V4_18Sdata!r})"
+            
+class SeqInfoV4_16S(Base):
+    __tablename__ = 'sequencingV4_16S'
+    id = Column(Integer, primary_key=True, index=True)
+    bottleID = Column(String)
+    cast = Column(String)
+    NominalDepth = Column(String)
+    filename = Column(String)
+    V4_16Sdata = Column(String)
+    #not sure how to do this next bit yet
+    #casts = relationship('Cast', back_populates='cruise')
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16Sdata={self.V4_16Sdata!r})"
   
    
 class CyverseInfo(Base):

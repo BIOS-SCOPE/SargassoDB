@@ -23,7 +23,7 @@ Krista Longnecker 6 April 2026
 # create a SQLite database engine
 SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
 #this will end up creating a new database everytime, but I need this for testing right now
-#SQLALCHEMY_DATABASE_URL = f"sqlite:///../test_data/new_database_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+#SQLALCHEMY_DATABASE_URL = f"sqlite:///test_data/new_database_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL) #echo=True) (turn off echo, gets annoying)
 
@@ -66,40 +66,67 @@ def load_discrete_info():
         session.add(db)
     
     session.commit()
-    
-def load_V4_sequencing_info():
-    print('Loading V4 sequencing information')
-    data_dir = 'test_data/BIOS-SCOPE time series/'
-    fName = 'V4_dada2_read_info_03052026.xlsx'
-    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+
+def load_V4_18S_sequencing_info():
+    print('Loading V4_18S sequencing information')
+    data_dir = 'test_data/'
+    #fName = 'V4_dada2_read_info_03052026.xlsx'
+    fName = 'BIOS-SCOPE DNA Master 2026.03.10.xlsx'
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),header=0,
+                                   sheet_name = 'BIOS-SCOPE Samples 2014-2023',
+                                   dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Depths':str}))                                   
     #strip the @#%@#^$ spaces in headers
     df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
 
     session = Session()
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoV4()
-        db.bottleID = row['BottleID'] 
+        db = models.SeqInfoV4_18S()
+        db.bottleID = row['New_Bottle_ID'] 
         db.cast = row['Cast']
-        db.filename = row['FilenameinCyverse']
-        db.V4data = fName
+        db.filename = row['V4_18s_Sequencing_File']
+        db.V4_18Sdata = fName
+        session.add(db)
+    
+    session.commit()
+        
+def load_V4_16S_sequencing_info():
+    print('Loading V4_16S sequencing information')
+    data_dir = 'test_data/'
+    #fName = 'V4_dada2_read_info_03052026.xlsx'
+    fName = 'BIOS-SCOPE DNA Master 2026.03.10.xlsx'
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),header=0,
+                                   sheet_name = 'BIOS-SCOPE Samples 2014-2023',
+                                   dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Depths':str}))                                   
+    #strip the @#%@#^$ spaces in headers
+    df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
+
+    session = Session()
+    for index, row in tqdm(df.iterrows()):
+        db = models.SeqInfoV4_16S()
+        db.bottleID = row['New_Bottle_ID'] 
+        db.cast = row['Cast']
+        db.filename = row['V4_16s_Sequencing_File']
+        db.V4_16Sdata = fName
         session.add(db)
     
     session.commit()
     
 def load_V1V2_sequencing_info():
     print('Loading V1V2 sequencing information')
-    data_dir = 'test_data/BIOS-SCOPE time series/'
-    fName = 'V1V2_dada2_read_info_03052026.xlsx'
-    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),
-                                   dtype={'Bottle ID':str,'Cruise':str,'Cast':str,'Depth':str}))
+    data_dir = 'test_data/'
+    fName = 'BIOS-SCOPE DNA Master 2026.03.10.xlsx'
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),header=0,
+                                   sheet_name = 'BIOS-SCOPE Samples 2014-2023',
+                                   dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Depths':str}))  
     #strip the @#%@#^$ spaces in headers
     df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.SeqInfoV1V2()
-        db.bottleID = row['BottleID'] 
+        db.bottleID = f"{row['New_Bottle_ID']}" #f"{row['Source Name']}"
         db.cast = row['Cast']
-        db.filename = row['FileName']
+        #pdb.set_trace()
+        db.filename = row['V1V2_Sequencing_File']
         db.V1V2data = fName
         session.add(db)
     
@@ -263,7 +290,8 @@ def load_metaboliteUntargeted_info():
         session.commit()       
 
 if __name__ == "__main__":
-    load_V4_sequencing_info()
+    load_V4_16S_sequencing_info()
+    load_V4_18S_sequencing_info()
     load_V1V2_sequencing_info()
     load_cyverse_info()
     load_discrete_info()
