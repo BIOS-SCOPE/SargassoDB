@@ -1,11 +1,14 @@
 # SargassoDB (branch movingAhead)
 
+## 7 April 2026
+I can use checkMatch.ipynb to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
+
 ## 6 April 2026
 Have this mostly ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt:
 
 ```bash
 venv\Scripts\activate
-pip install -r requirements.txt 
+pip install -r requirements.txt (just once)
 python populate_db.py
 python crud.py
 ```
