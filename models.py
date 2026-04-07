@@ -80,6 +80,9 @@ class CyverseInfo(Base):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String)  
     source = Column(String)
+    V4_16S_found = Column(String)
+    V4_18S_found = Column(String)
+    V1V2_found = Column(String)
     def __repr__(self) -> str:
         return f"index(id={self.id!r}, filename={self.filename!r})"
     

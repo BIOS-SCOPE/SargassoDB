@@ -149,6 +149,9 @@ def load_cyverse_info():
         db = models.CyverseInfo()
         db.filename = row['filename'] 
         db.source = row['source']
+        db.V1V2_found = row['source'] #actually need blank, but this will work for now
+        db.V4_16S_found = row['source']
+        db.V4_18S_found = row['source']
         session.add(db)
     
     session.commit()
