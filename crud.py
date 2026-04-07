@@ -35,10 +35,10 @@ metadata_obj.reflect(bind=engine)
 user_seqV4_16S = Table('sequencingV4_16S', metadata_obj, autoload_with=engine)
 user_seqV4_18S = Table('sequencingV4_18S', metadata_obj, autoload_with=engine)
 user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
-#user_cy = Table('cyverse',metadata_obj,autoload_with=engine) #not using this 
 user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
 user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
+user_cy = Table('cyverse',metadata_obj,autoload_with=engine) 
 
 #
 #see all of what is in table (leave query here for future reference, not in use)
@@ -60,7 +60,7 @@ session = Session()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
-    select(user_seqV1V2.c.V1V2data)
+    select(user_seqV1V2.c.filename)
     .where(user_discrete.c.bottleID == user_seqV1V2.c.bottleID)
     .limit(1)
     .scalar_subquery()
@@ -88,7 +88,7 @@ session = Session()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
-    select(user_seqV4_16S.c.V4_16Sdata)
+    select(user_seqV4_16S.c.filename)
     .where(user_discrete.c.bottleID == user_seqV4_16S.c.bottleID)
     .limit(1)
     .scalar_subquery()
@@ -117,7 +117,7 @@ session = Session()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
-    select(user_seqV4_18S.c.V4_18Sdata)
+    select(user_seqV4_18S.c.filename)
     .where(user_discrete.c.bottleID == user_seqV4_18S.c.bottleID)
     .limit(1)
     .scalar_subquery()

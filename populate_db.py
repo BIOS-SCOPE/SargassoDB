@@ -133,21 +133,22 @@ def load_V1V2_sequencing_info():
     session.commit()
 
 def load_cyverse_info():
-    #keep this, but for the moment I am not using the list of files from Luis
+    #use this to check that I found all I expected
     print('Loading sequencing information')
-    dataDir = 'test_data/BIOS-SCOPE time series/'
-    fName = 'files_shortList.txt'
-    df = pd.read_csv(os.path.join(dataDir,fName),sep='\t',header=None,comment = '#')
+    dataDir = 'test_data/Luis_fileLists/'
+    fName = 'filelist_concatenated.csv'
+    df = pd.read_csv(os.path.join(dataDir,fName))
 
-    #strip off the end of the filename
-    for index,row in df.iterrows():
-        file = os.path.basename(row.to_string()).strip('.gz')
-        df.loc[index,'filename'] = file
+    # #strip off the end of the filename
+    # for index,row in df.iterrows():
+        # file = os.path.basename(row.to_string()).strip('.gz')
+        # df.loc[index,'filename'] = file
 
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.CyverseInfo()
         db.filename = row['filename'] 
+        db.source = row['source']
         session.add(db)
     
     session.commit()

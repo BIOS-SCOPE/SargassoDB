@@ -79,6 +79,7 @@ class CyverseInfo(Base):
     __tablename__ = 'cyverse'
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String)  
+    source = Column(String)
     def __repr__(self) -> str:
         return f"index(id={self.id!r}, filename={self.filename!r})"
     
