@@ -10,6 +10,10 @@ python populate_db.py
 python crud.py
 ```
 
+To do list:
+- [ ] How to force NewID to string in the database (and not when I read in the file)
+- [ ] Check that I am not missing information (and/or do I have the data files that match Luis's lists from Cyverse?)
+
 ## 5 April 2026
 Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scripts that are not being run in Jupyter notebook
 
