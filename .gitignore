@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.pyc
+.ipynb_checkpoints/
 venv/
 
 # Testing
@@ -8,8 +9,8 @@ venv/
 htmlcov/
 .pytest_cache/
 
-# Database
-sql_app.db
+# Database (actually in test_data but leave as a reminder)
+# sql_app.db
 
 # Data files (some too large, just hide the full folder)
 #test_data/bats49month_fulldata_relativeabundance_May_28_2021.csv
@@ -24,7 +25,6 @@ notebooks/data/
 .vscode/
 .claude/
 .kiro/
-.ipynb_checkpoints/
 
 # Node
 frontend/node_modules/

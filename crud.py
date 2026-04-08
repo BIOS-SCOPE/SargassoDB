@@ -79,7 +79,7 @@ with engine.connect() as conn:
 
 #link the V4_16S
 #link the V4_16S
-print('working on linking the V4_16S data')
+print('linking the V4_16S data')
 
 # create a session factory
 Session = sessionmaker(bind=engine)
@@ -106,7 +106,7 @@ with engine.connect() as conn:
 
 #link the V4_18S
 #link the V4_18S
-print('working on linking the V4_18S data')
+print('linking the V4_18S data')
 
 # create a session factory
 Session = sessionmaker(bind=engine)
@@ -141,7 +141,7 @@ with engine.connect() as conn:
     
 #finally the metabolite data
 #finally the metabolite data
-print('working on linking the metabolite data')
+print('linking the metabolite data')
 
 # create a session factory
 Session = sessionmaker(bind=engine)
@@ -166,7 +166,7 @@ with engine.connect() as conn:
 
 #adding the untargeted metabolite data
 #adding the untargeted metabolite data
-print('working on linking the untargeted metabolite data')
+print('linking the untargeted metabolite data')
 
 # create a session factory
 Session = sessionmaker(bind=engine)

@@ -46,12 +46,23 @@ with contextlib.closing(engine.connect()) as con:
     trans.commit()
 
     
-# # insert some data, setup functions, one per data type
+# # define the functions needed to run this script
+def delete_db():
+    print('Deleting database: does not work nicely with Jupyter notebook script open')
+    db_path = 'test_data/sargssso.db'
+    if os.path.exists(db_path):
+        os.unlink(db_path)
+        
+def trimSuffix(one):
+    one = one.removesuffix('.gz').removesuffix('.fastq').removesuffix('_fastqc.html').removesuffix('_fastqc.zip')  
+    return one
+    
 def load_discrete_info():
     print('Loading discrete sample information')
-    data_dir = 'test_data/BIOS-SCOPE time series/'
-    fName = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
-    #fName = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
+    data_dir = 'test_data/'
+    #fName = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
+    #print('NOTE: using mini database for testing')
+    fName = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name='DATA'))
 
     session = Session()
@@ -77,13 +88,20 @@ def load_V4_18S_sequencing_info():
                                    dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Depths':str}))                                   
     #strip the @#%@#^$ spaces in headers
     df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
+    
+    #have multiple possible endings to each filename nothing, fastaq, fastaq.gz...change that
+    for index,row in df.iterrows():
+        one = row['V4_18s_Sequencing_File']
+        if not pd.isna(one):
+            df.loc[index,'V4_18s_Sequencing_File'] = trimSuffix(one)      
 
+    #pdb.set_trace()
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.SeqInfoV4_18S()
         db.bottleID = row['New_Bottle_ID'] 
         db.cast = row['Cast']
-        db.filename = row['V4_18s_Sequencing_File']
+        db.filename = row['V4_18s_Sequencing_File']           
         db.V4_18Sdata = fName
         session.add(db)
     
@@ -100,6 +118,12 @@ def load_V4_16S_sequencing_info():
     #strip the @#%@#^$ spaces in headers
     df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
 
+    #have multiple possible endings to each filename nothing, fastaq, fastaq.gz...change that
+    for index,row in df.iterrows():
+        one = row['V4_16s_Sequencing_File']
+        if not pd.isna(one):
+            df.loc[index,'V4_16s_Sequencing_File'] = trimSuffix(one)
+            
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.SeqInfoV4_16S()
@@ -120,6 +144,14 @@ def load_V1V2_sequencing_info():
                                    dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Depths':str}))  
     #strip the @#%@#^$ spaces in headers
     df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
+        
+    #have multiple possible endings to each filename nothing, fastaq, fastaq.gz...change that
+    for index,row in df.iterrows():
+        one = row['V1V2_Sequencing_File']
+        if not pd.isna(one):
+            df.loc[index,'V1V2_Sequencing_File'] = trimSuffix(one)  
+            
+            
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.SeqInfoV1V2()
@@ -135,15 +167,16 @@ def load_V1V2_sequencing_info():
 def load_cyverse_info():
     #use this to check that I found all I expected
     print('Loading sequencing information')
-    dataDir = 'test_data/Luis_fileLists/'
+    dataDir = 'test_data/'
     fName = 'filelist_concatenated.csv'
     df = pd.read_csv(os.path.join(dataDir,fName))
-
-    # #strip off the end of the filename
-    # for index,row in df.iterrows():
-        # file = os.path.basename(row.to_string()).strip('.gz')
-        # df.loc[index,'filename'] = file
-
+    
+    #have multiple possible endings to each filename nothing, fastaq, fastaq.gz...change that
+    for index,row in df.iterrows():
+        one = row['filename']
+        if not pd.isna(one):
+            df.loc[index,'filename'] = trimSuffix(one)
+            
     session = Session()
     for index, row in tqdm(df.iterrows()):
         db = models.CyverseInfo()
@@ -294,6 +327,7 @@ def load_metaboliteUntargeted_info():
         session.commit()       
 
 if __name__ == "__main__":
+    delete_db() #will not work in jupyter notebook
     load_V4_16S_sequencing_info()
     load_V4_18S_sequencing_info()
     load_V1V2_sequencing_info()

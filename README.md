@@ -1,5 +1,22 @@
 # SargassoDB (main)
 
+## 8 April 2026
+Opted to trim the sequencing files back to names without any suffixes as the use of suffixes varies.\
+I have at least four options, so this function will remove them: ```one = one.removesuffix('.gz').removesuffix('.fastq').removesuffix('_fastqc.html').removesuffix('_fastqc.zip')```     
+
+Basic steps in an Anaconda Prompt:
+```bash
+venv\Scripts\activate
+python populate_db.py
+python crud.py
+python checkMatch.py
+```
+
+checkMatch.py will send out **BIOSSCOPE_checkMatch.csv** for easy browsing
+
+To do list:
+- [ ] How to force NewID to string in the database (and not when I read in the file)
+
 ## 7 April 2026
 I can use checkMatch.ipynb to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
 First though, pull this code into the main branch (but leave the other two branches: kristaWorking and movingAhead)
@@ -13,11 +30,6 @@ pip install -r requirements.txt (just once)
 python populate_db.py
 python crud.py
 ```
-
-To do list:
-- [ ] How to force NewID to string in the database (and not when I read in the file)
-- [ ] Check that I am not missing information (and/or do I have the data files that match Luis's lists from Cyverse?)
-- [ ] Or, another way of looking at this, how many files are at Cyverse and/or Google Drive that are not listed in DNA master?
 
 ## 5 April 2026
 Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scripts that are not being run in Jupyter notebook
