@@ -16,6 +16,7 @@ checkMatch.py will send out **BIOSSCOPE_checkMatch.csv** for easy browsing
 
 To do list:
 - [ ] How to force NewID to string in the database (and not when I read in the file)
+- [ ] Add to checkMatch -> each sample should have R1 and R2 (forward and reverse primers)
 
 ## 7 April 2026
 I can use checkMatch.ipynb to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
