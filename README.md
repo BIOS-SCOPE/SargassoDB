@@ -1,4 +1,14 @@
-# SargassoDB (main)
+# SargassoDB
+BIOS-SCOPE has been collecting data for ten years and needs a database to merge across datastreams. This code is designed to allow team members to look for a specific sample and see if data exist. For the moment, this only considers data collected from discrete samples. The output of the code includes the following:
+1. Cruise
+2. Date
+3. bottleID (ten digit number: five digit cruise, three digit cast, two digit Niskin bottle)
+4. V1V2 data: lane information
+5. V4_16Sdata: lane information
+6. V4_18Sdata: lane information
+7. mtabData: repository number for targeted metabolites (known compounds, ~60 compoundd)
+8. mtabDataUntargeted: repository number for untargeted metabolites (unknown features, 1000s of options)
+
 
 ## 8 April 2026
 Opted to trim the sequencing files back to names without any suffixes as the use of suffixes varies.\
