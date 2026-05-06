@@ -19,8 +19,8 @@ To do list:
 - [ ] Add to checkMatch -> each sample should have R1 and R2 (forward and reverse primers)
 
 ## 7 April 2026
-I can use checkMatch.ipynb to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
-First though, pull this code into the main branch (but leave the other two branches: kristaWorking and movingAhead)
+I can use ```checkMatch.ipynb``` to connect the sequence file list(s) from Luis with the database, and it becomes clear that I have relatively few matches so I need to look into this.
+First though, pull this code into the main branch (but leave the other two branches: KristaWorking and movingAhead)
 
 ## 6 April 2026
 Have this mostly ready as scripts only (so much faster than using Jupyter notebook). Basic steps in an Anaconda Prompt:
@@ -36,7 +36,7 @@ python crud.py
 Can now pull in V1V2, V4, and metabolites data into the database and then export the results as a table. Ready to tidy this up into scripts that are not being run in Jupyter notebook
 
 ## 3 April 2026
-Make a different branch to move ahead as kristaWorking is messing around with existing code to understand it.
+Make a different branch to move ahead as KristaWorking is messing around with existing code to understand it.
 So far, so good, I can merge two files (based on joining with fastq filename). Move on to searching in the discrete file for datatype.
 Have a working prototype, now I need to figure out how to insert the filename information back into discrete (or a subset of discrete)
 
@@ -45,11 +45,10 @@ Have a basic query working. I think I am ready to start gathering up real BIOS-S
 
 ## updated 31 March 2026 (Krista)
 
-While this is an older repository, it holds code that is able to generate a database (e.g., it works). Move forward with this. Work in a separate branch: KristaWorking
+While this is an older repository, it holds code that is able to generate a database (e.g., it works). Move forward with this, though I will work in a separate branch: KristaWorking
 
 ## updated 30 March 2026 (Krista)
-Actually this is useful as I can actually get this database to run which I could not do with the newer code.\
-Keep this and move on from here.
+This is useful as I can get this database to run. Keep this and move on from here.
 
 Some basic steps:
 ```bash
@@ -63,7 +62,7 @@ python populate_db.py (will take a while)
 Will produce a database in sql_app.db
 
 --- 
-
+(original notes from Ben follow)
 This is the private data repository for the BIOS-SCOPE team.
 
 It is built upon an SQLite database with the following entity relationships:
