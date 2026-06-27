@@ -17,6 +17,7 @@ I have at least four options, so this function will remove them: ```one = one.re
 
 Basic steps in an Anaconda Prompt:
 ```bash
+python -m venv venv\ (set up the virtual environment)
 pip install -r requirements.txt (just once, sets this up)
 venv\Scripts\activate
 python populate_db.py
