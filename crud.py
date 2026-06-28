@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import update,select
 import pandas as pd
 import os
-import pdb
+import pdb #use with pdb.set_trace()
 
 '''
 Now I need to update the database based on the links across tables in 
@@ -14,6 +14,7 @@ READ
 UPDATE
 DELETE
 Krista Longnecker, 6 April 2026
+Krista Longnecker, 27 June 2026
 '''
 
 
@@ -39,11 +40,32 @@ user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
 user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
 user_cy = Table('cyverse',metadata_obj,autoload_with=engine) 
+user_basics = Table('sequencingBasics',metadata_obj,autoload_with=engine)
 
+#pdb.set_trace()
 #
 #see all of what is in table (leave query here for future reference, not in use)
 #session.query(SeqInfoV4).all()
 
+# pull in the data re: general sequencing information
+## pull in the data re: general sequencing information
+print('Pull in the basic sequencing information')
+# 1. Define the subquery to fetch a value from the second table
+scalar_subq = (
+    select(user_basics.c.extracted)
+    .where(user_discrete.c.bottleID == user_basics.c.bottleID)
+    .limit(1)
+    .scalar_subquery()
+)
+
+# 2. Use the subquery in the .values() clause of an update statement
+stmt = update(user_discrete).values(extracted=scalar_subq)
+
+#then execute the statement
+with engine.connect() as conn:
+    result = conn.execute(stmt)
+    conn.commit()
+    
 # link the V1V2 data
 # link the V1V2 data
 print('linking the V1V2 data')
@@ -51,12 +73,6 @@ print('linking the V1V2 data')
 # create a session factory
 Session = sessionmaker(bind=engine)
 session = Session()
-
-# pdb.set_trace()
-# users = session.query(user_seqV1V2).all()
-# print(users)
-
-
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
@@ -73,9 +89,7 @@ stmt = update(user_discrete).values(V1V2data=scalar_subq)
 with engine.connect() as conn:
     result = conn.execute(stmt)
     conn.commit()
-    
-    
-    
+   
 
 #link the V4_16S
 #link the V4_16S
@@ -102,8 +116,6 @@ with engine.connect() as conn:
     result = conn.execute(stmt)
     conn.commit()   
     
-
-
 #link the V4_18S
 #link the V4_18S
 print('linking the V4_18S data')
@@ -123,8 +135,6 @@ scalar_subq = (
     .scalar_subquery()
 )
 
-#pdb.set_trace()
-
 # 2. Use the subquery in the .values() clause of an update statement
 stmt = update(user_discrete).values(V4_18Sdata=scalar_subq)
 
@@ -132,13 +142,8 @@ stmt = update(user_discrete).values(V4_18Sdata=scalar_subq)
 with engine.connect() as conn:
     result = conn.execute(stmt)
     conn.commit()       
-
-
-
-    
         
  
-    
 #finally the metabolite data
 #finally the metabolite data
 print('linking the metabolite data')
@@ -206,6 +211,11 @@ users = Table('discrete', metadata,
     Column('bottleID', String),
     Column('cruise', String),
     Column('yyyymmdd',String),
+    Column('sType', String),
+    Column('location',String),
+    Column('status',String),
+    Column('extracted',String),
+    Column('analyst1',String),
     Column('V4_16Sdata',String),
     Column('V4_18Sdata',String),
     Column('V1V2data',String),
@@ -221,10 +231,10 @@ with engine.connect() as conn:
     table_data = [row._mapping for row in rows]
     df = pd.DataFrame(table_data)
     #need to reorder the columns for this project, easier to read
-    df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','V1V2data','V4_16Sdata','V4_18Sdata','mtabData','mtabDataUntargeted'])
+    df = df.reindex(columns = ['cruise','yyyymmdd','bottleID','sType','location','status','extracted','analyst1','V1V2data','V4_16Sdata','V4_18Sdata','mtabData','mtabDataUntargeted'])
 
 #export the final result as a CSV file
-df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')    
+df.to_csv('test_data/BIOSSCOPE_availableData.2026.06.27.csv')    
 #df_final = df  
 
 
@@ -265,5 +275,9 @@ df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')
 # df.to_csv('test_data/BIOSSCOPE_availableData.2026.04.06.csv')    
 # df_final = df    
     
-    
+
+# pdb.set_trace()
+# users = session.query(user_seqV1V2).all()
+# print(users)
+
     

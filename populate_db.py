@@ -78,6 +78,31 @@ def load_discrete_info():
     
     session.commit()
 
+def load_sequencing_info():
+    print('Getting general sequencing information')
+    data_dir = 'test_data/'
+    #fName = 'V4_dada2_read_info_03052026.xlsx'
+    fName = 'BIOS-SCOPE DNA Master 2026.03.10.xlsx'
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),header=0,
+                                   sheet_name = 'BIOS-SCOPE Samples 2014-2023',
+                                   dtype={'New_Bottle_ID':str,'Type':str,'Location':str,'Status':str,'Extracted':str,'Analyst1':str}))
+           
+    #strip the @#%@#^$ spaces in headers
+    df.columns = df.columns.str.replace(' ','') ## actual file has a space AFTER Bottle ID !
+
+    session = Session()
+    for index, row in tqdm(df.iterrows()):
+        db = models.SeqInfoBasics()
+        db.bottleID = row['New_Bottle_ID'] 
+        db.sType = row['Type']
+        db.location = row['Location']
+        db.status = row['Status']
+        db.extracted = row['Extracted']
+        db.analyst1 = row['Analyst1']
+        session.add(db)
+    
+    session.commit()
+    
 def load_V4_18S_sequencing_info():
     print('Loading V4_18S sequencing information')
     data_dir = 'test_data/'
@@ -335,3 +360,4 @@ if __name__ == "__main__":
     load_discrete_info()
     load_metabolite_info()
     load_metaboliteUntargeted_info()
+    load_sequencing_info()
