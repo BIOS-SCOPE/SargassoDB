@@ -28,12 +28,9 @@ class DiscreteInfo(Base):
     status = Column(String)
     extracted = Column(String)
     analyst1 = Column(String)
-    #already had these next rows:
     V1V2data = Column(String)
-    V4_16Sdata = Column(String)
-    V4_18Sdata = Column(String)
+    V4data = Column(String)
     mtabData = Column(String)
-    mtabDataUntargeted = Column(String)
     
     
     #need this next row to get the nice output (other get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
