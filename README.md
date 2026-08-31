@@ -9,7 +9,8 @@ BIOS-SCOPE has been collecting data for ten years and needs a database to merge 
 7. mtabData: repository number for targeted metabolites (known compounds, ~60 compoundd)
 8. mtabDataUntargeted: repository number for untargeted metabolites (unknown features, 1000s of options)
 
-The schema (work in progress) is [here](https://github.com/BIOS-SCOPE/SargassoDB/blob/main/schema.md); to do - figure out easy way to make that a JPG
+The schema (work in progress) is [here](https://github.com/BIOS-SCOPE/SargassoDB/blob/main/schema.md): easier to visualize this is made by mermaid after exporting from SQL to ER diagram website or:
+![Entity Relationship Diagram](schema.png)
 
 The spreadsheet with a summary of available data on Google Drive at: BIOS_SCOPE_Team/1.0 DATA/Datasets/BIOSSCOPE_availableData.2026.04.06.csv
 
