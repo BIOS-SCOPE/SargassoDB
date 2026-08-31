@@ -10,6 +10,7 @@ from typing import Optional
 Setting up the models to use with the BIOS-SCOPE dataset
 Krista Longnecker, 6 April 2026
 Krista Longnecker, 27 June 2026
+Krista Longnecker, 31 August 2026 --> ready to make this a relational database with defined links
 '''
 
 class Base(DeclarativeBase):
@@ -30,33 +31,31 @@ class DiscreteInfo(Base):
     yyyymmdd: Mapped[str] = mapped_column(String)
     nominalDepth: Mapped[str] = mapped_column(String)
     
-    # also add in empty columns for the pieces I am adding based on matches (e.g., not just what is in the discrete file)
-    sType: Mapped[Optional[str]] = mapped_column(String, default=None)
-    location: Mapped[Optional[str]] = mapped_column(String, default=None)
-    status: Mapped[Optional[str]] = mapped_column(String, default=None)
-    extracted: Mapped[Optional[str]] = mapped_column(String, default=None)
-    analyst1: Mapped[Optional[str]] = mapped_column(String, default=None)
-    V1V2data: Mapped[Optional[str]] = mapped_column(String, default=None)
-    V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    mtabData: Mapped[Optional[str]] = mapped_column(String, default=None)
-    mtabDataUntargeted: Mapped[Optional[str]] = mapped_column(String, default=None)  
+    # # also add in empty columns for the pieces I am adding based on matches (e.g., not just what is in the discrete file)
+    # # I think these can be linked from other places and found by query (8/31/2026...working)
+    # sType: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # location: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # status: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # extracted: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # analyst1: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # V1V2data: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # mtabData: Mapped[Optional[str]] = mapped_column(String, default=None)
+    # mtabDataUntargeted: Mapped[Optional[str]] = mapped_column(String, default=None)  
     
     # =========================================================================
-    # RELATIONSHIPS (These don't create database columns; they are Python-only shortcuts)
+    # RELATIONSHIPS (think of these as shortcuts in Python)
     # =========================================================================
     # 1-to-1 relationship with SeqInfoBasics
     seq_basics: Mapped[Optional["SeqInfoBasics"]] = relationship(back_populates="parent_discrete")
     
-    # 1-to-Many relationship (Assuming a bottle could have multiple V4 rows) ...think if that is true
-    #by making this a list...get pull multiple rows
+    # 1-to-Many relationship (Assuming a bottle could have multiple V4 rows): need list to get multiple rows
     v4_16s_runs: Mapped[list["SeqInfoV4_16S"]] = relationship("SeqInfoV4_16S", back_populates="parent_discrete")   
     v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship("SeqInfoV4_18S",back_populates="parent_discrete")
     v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship("SeqInfoV1V2",back_populates="parent_discrete")
-
     
-    
-    #need this next row to get the nice output (other get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
+    #need this next row to get the nice output (otherwise get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
     def __repr__(self):
         return f"<DiscreteInfo(bottleID='{self.bottleID}', cruise='{self.cruise}')>"
 
@@ -85,7 +84,7 @@ class SeqInfoV4_16S(Base):
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    # Use this to note the parent class string, expects a single optional object
+    # set the relationship to DiscreteInfo:
     parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_16s_runs")
 
     def __repr__(self) -> str:

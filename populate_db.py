@@ -46,7 +46,7 @@ models.Base.metadata.create_all(engine)
 # # define the functions needed to run this script
    
 def delete_db():
-    print('Deleting database: does not work nicely with Jupyter notebook script open')
+    print('Deleting database: will not work if using a Jupyter notebook')
     db_path = 'test_data/sargssso.db'
     if os.path.exists(db_path):
         os.unlink(db_path)
@@ -58,7 +58,7 @@ def trimSuffix(one):
 def load_discrete_info(data_dir,fName):
     print('Loading discrete sample information')
     #data_dir = 'test_data/'
-    #send fName into the function
+    #send fName into the function (see below...tired of updating for each function
     #fName = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
     #print('NOTE: using mini database for testing')
     #fName = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
