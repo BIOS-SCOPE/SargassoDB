@@ -91,8 +91,8 @@ with engine.connect() as conn:
     conn.commit()
    
 
-#link the V4_16S
-#link the V4_16S
+# link the V4_16S
+# link the V4_16S
 print('linking the V4_16S data')
 
 # create a session factory

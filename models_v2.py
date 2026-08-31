@@ -51,9 +51,6 @@ class DiscreteInfo(Base):
     # 1-to-Many relationship (Assuming a bottle could have multiple V4 rows) ...think if that is true
     #by making this a list...get pull multiple rows
     v4_16s_runs: Mapped[list["SeqInfoV4_16S"]] = relationship(back_populates="discrete_parent")
-    v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship(back_populates="discrete_parent")
-    v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship(back_populates="discrete_parent")
-
     
     
     #need this next row to get the nice output (other get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
@@ -64,7 +61,7 @@ class SeqInfoBasics(Base):
     __tablename__ = 'sequencingBasics'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
-    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, default=None)
     sType: Mapped[Optional[str]] = mapped_column(String, default=None)
     location: Mapped[Optional[str]] = mapped_column(String, default=None)
     status: Mapped[Optional[str]] = mapped_column(String, default=None)
@@ -77,28 +74,16 @@ class SeqInfoBasics(Base):
     def __repr__(self):
         return f"<SeqInfo_basics(bottleID='{self.bottleID}', extracted='{self.extracted}', Analyst1 ='{self.analyst1}')>"
 
-class SeqInfoV4_16S(Base):
-    __tablename__ = 'sequencingV4_16S'
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
-    cast: Mapped[Optional[str]] = mapped_column(String, default=None)
-    NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
-    filename: Mapped[Optional[str]] = mapped_column(String, default=None)
-    V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v4_16s_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
-
-    def __repr__(self) -> str:
-        return f"SeqInfoV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16Sdata={self.V4_16Sdata!r})"
-    
 class SeqInfoV1V2(Base):
     __tablename__ = 'sequencingV1V2'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V1V2data: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v1v2_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
+    #not sure how to do this next bit yet
+    #casts = relationship('Cast', back_populates='cruise')
     
     def __repr__(self):
         return f"<SeqInfoV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
@@ -106,20 +91,36 @@ class SeqInfoV1V2(Base):
 class SeqInfoV4_18S(Base):
     __tablename__ = 'sequencingV4_18S'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    bottleID: Mapped[Optional[str]] = mapped_column(String,ForeignKey("discrete.bottleID"), default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v4_18s_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
+    #not sure how to do this next bit yet
+    #casts = relationship('Cast', back_populates='cruise')
     
-    # # Back-populate link back to DiscreteInfo
-    # discrete_parent: Mapped[Optional["DiscreteInfo"]] = relationship(back_populates="v4_18s_runs")
-    # #what that does: I can automatically pull the matching sequencing runs for V4_16s data for a specific bottle without writing a new query
+    # Back-populate link back to DiscreteInfo
+    discrete_parent: Mapped[Optional["DiscreteInfo"]] = relationship(back_populates="v4_16s_runs")
+    #what that does: I can automatically pull the matching sequencing runs for V4_16s data for a specific bottle without writing a new query
     
     def __repr__(self) -> str:
         return f"SeqInfoV4_18S(id={self.id!r}, name={self.bottleID!r}, V4_18Sdata={self.V4_18Sdata!r})"
-        
+            
+class SeqInfoV4_16S(Base):
+    __tablename__ = 'sequencingV4_16S'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, default=None)
+    cast: Mapped[Optional[str]] = mapped_column(String, default=None)
+    NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
+    filename: Mapped[Optional[str]] = mapped_column(String, default=None)
+    V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
+    #not sure how to do this next bit yet
+    #casts = relationship('Cast', back_populates='cruise')
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16Sdata={self.V4_16Sdata!r})"
+  
+   
 class CyverseInfo(Base):
     __tablename__ = 'cyverse'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

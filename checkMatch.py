@@ -151,9 +151,3 @@ with engine.connect() as conn:
 df.head()
 df.to_csv('test_data/BIOSSCOPE_checkMatch.csv')
 
-
-# In[ ]:
-
-
-
-
