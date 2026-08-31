@@ -10,6 +10,8 @@ BIOS-SCOPE has been collecting data for ten years and needs a database to merge 
 8. mtabDataUntargeted: repository number for untargeted metabolites (unknown features, 1000s of options)
 
 The spreadsheet with a summary of available data on Google Drive at: BIOS_SCOPE_Team/1.0 DATA/Datasets/BIOSSCOPE_availableData.2026.04.06.csv
+## 28 August 2026
+Tidying up GitHub and removed some deadend branches.
 
 ## 8 April 2026
 Opted to trim the sequencing files back to names without any suffixes as the use of suffixes varies.\
