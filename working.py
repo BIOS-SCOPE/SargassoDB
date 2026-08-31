@@ -1,45 +1,62 @@
 #working.py
-from sqlalchemy import create_engine, inspect, MetaData, Table
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import update,select
 import pandas as pd
-import os
-import pdb #use with pdb.set_trace()
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+#from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine
 
-#import database #cannot get this to work, skip for now
+from models import DiscreteInfo, SeqInfoBasics #here I can just use SeqInfoBasics
+#import models #if I use this, then syntax is models.SeqInfo
+#from models import Base,SeqInfoV4 #here I can just use SeqInfo
+
+'''
+working
+Krista Longnecker 30 August 2026
+
+'''
+
 # create a SQLite database engine
 SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
 #this will end up creating a new database everytime, but I need this for testing right now
+#SQLALCHEMY_DATABASE_URL = f"sqlite:///test_data/new_database_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL) #, echo=True) #(turn off echo, gets annoying)
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# # create a session factory
+# Session = sessionmaker(bind=engine)
 
-# create a session factory
-Session = sessionmaker(bind=engine)
+# #create the database
+# models.Base.metadata.create_all(engine)
 
-
-#reflect the tables so I can work on them
-metadata_obj = MetaData()
-metadata_obj.reflect(bind=engine)
-
-user_seqV4_16S = Table('sequencingV4_16S', metadata_obj, autoload_with=engine)
-user_seqV4_18S = Table('sequencingV4_18S', metadata_obj, autoload_with=engine)
-user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
-user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
-user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
-user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
-user_cy = Table('cyverse',metadata_obj,autoload_with=engine) 
-user_basics = Table('sequencingBasics',metadata_obj,autoload_with=engine)
 
 with Session(engine) as session:
-    # Get one NewID from the master table
-    pdb.set_trace()
-    bottle = session.get(DiscreteInfo, 1) 
+    # 1. Build a SELECT statement that joins 'discrete' to 'sequencingBasics'
+    stmt = (
+        select(DiscreteInfo, SeqInfoBasics)
+        .join(SeqInfoBasics, DiscreteInfo.bottleID == SeqInfoBasics.bottleID)
+    )
     
-    print(f"Bottle ID: {bottle.bottleID}")
-    print(f"Depth: {bottle.nominalDepth}")
+    # 2. Execute the join query
+    result = session.execute(stmt).all()
     
-    # 2. Instantly loop through all sequencing runs linked to this bottle!
-    # (SQLAlchemy automatically handles the database join behind the scenes)
-    for run in bottle.v4_16s_runs:
-        print(f" -> Found Sequence File: {run.filename}")
-        print(f" -> V4 16S Data: {run.V4_16Sdata}")
+    table_data = []
+    for disc, seq in result:
+        table_data.append({
+            "Bottle ID": disc.bottleID,
+            "Cruise": disc.cruise,
+            "Extracted Code": seq.extracted if seq else None,
+            "Analyst": seq.analyst1 if seq else None
+        })
+        
+    df = pd.DataFrame(table_data)
+    
+
+
+print(df.head())
+# df.to_csv('test_data/out1.csv') 
+
+# In Jupyter, just typing 'df' will print a gorgeous HTML table grid
+print(df.to_string(index=False)) 
+
+
+
+

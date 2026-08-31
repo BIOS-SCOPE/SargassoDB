@@ -46,13 +46,13 @@ class DiscreteInfo(Base):
     # RELATIONSHIPS (These don't create database columns; they are Python-only shortcuts)
     # =========================================================================
     # 1-to-1 relationship with SeqInfoBasics
-    seq_basics: Mapped[Optional["SeqInfoBasics"]] = relationship(back_populates="discrete_parent")
+    seq_basics: Mapped[Optional["SeqInfoBasics"]] = relationship(back_populates="parent_discrete")
     
     # 1-to-Many relationship (Assuming a bottle could have multiple V4 rows) ...think if that is true
     #by making this a list...get pull multiple rows
-    v4_16s_runs: Mapped[list["SeqInfoV4_16S"]] = relationship(back_populates="discrete_parent")
-    v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship(back_populates="discrete_parent")
-    v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship(back_populates="discrete_parent")
+    v4_16s_runs: Mapped[list["SeqInfoV4_16S"]] = relationship("SeqInfoV4_16S", back_populates="parent_discrete")   
+    v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship("SeqInfoV4_18S",back_populates="parent_discrete")
+    v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship("SeqInfoV1V2",back_populates="parent_discrete")
 
     
     
@@ -72,7 +72,7 @@ class SeqInfoBasics(Base):
     analyst1: Mapped[Optional[str]] = mapped_column(String, default=None)
     
     # Trying this : Back-populate link back to DiscreteInfo
-    discrete_parent: Mapped[Optional["DiscreteInfo"]] = relationship(back_populates="seq_basics")
+    parent_discrete: Mapped[Optional["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="seq_basics")
     
     def __repr__(self):
         return f"<SeqInfo_basics(bottleID='{self.bottleID}', extracted='{self.extracted}', Analyst1 ='{self.analyst1}')>"
@@ -85,7 +85,8 @@ class SeqInfoV4_16S(Base):
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v4_16s_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
+    # Use this to note the parent class string, expects a single optional object
+    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_16s_runs")
 
     def __repr__(self) -> str:
         return f"SeqInfoV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16Sdata={self.V4_16Sdata!r})"
@@ -98,7 +99,7 @@ class SeqInfoV1V2(Base):
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V1V2data: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v1v2_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
+    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v1v2_runs")
     
     def __repr__(self):
         return f"<SeqInfoV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
@@ -111,7 +112,7 @@ class SeqInfoV4_18S(Base):
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    v4_18s_runs: Mapped[list["DiscreteInfo"]] = relationship(back_populates="discrete_parent")
+    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_18s_runs")
     
     # # Back-populate link back to DiscreteInfo
     # discrete_parent: Mapped[Optional["DiscreteInfo"]] = relationship(back_populates="v4_18s_runs")
