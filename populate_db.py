@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import re
 import pdb #user with set_trace()
 from datetime import datetime
 from ftplib import FTP
@@ -7,6 +8,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 import contextlib
+import xml.etree.ElementTree as ET #use this for the riNCBIonline function as their data are in XML file
 #from sqlalchemy import MetaData
 
 import models #if I use this, then syntax is models.SeqInfo
@@ -46,7 +48,7 @@ models.Base.metadata.create_all(engine)
 # # define the functions needed to run this script
    
 def delete_db():
-    print('Deleting database: will not work if using a Jupyter notebook')
+    print('Deleting database') #: will not work if using a Jupyter notebook')
     db_path = 'test_data/sargssso.db'
     if os.path.exists(db_path):
         os.unlink(db_path)
@@ -55,6 +57,42 @@ def trimSuffix(one):
     one = one.removesuffix('.gz').removesuffix('.fastq').removesuffix('_fastqc.html').removesuffix('_fastqc.zip')  
     return one
     
+#parsing out the information in the filenames, use a function, this works with the NCBI filenames
+def parseSampleNCBI(sample):
+    #parsed = {} #use the next row and setup the dictionary first
+    #even empty it is useful as I don't have to repeat all the NA options
+    parsed = dict({'cruise5':'',
+                   'cast':'',
+                   'niskin':'',
+                   'cruise':'',
+                   'otherInfo':'',
+                   'depth':'',
+                   'sampleNumber':'',
+                   'New_Bottle_ID':'',
+                   'seqType':''})
+    #start with 10 digits - cruise - cast - niskin and then underscores to note 18S_V4
+    ru = [match.start() for match in re.finditer("_",sample)]
+    #print(sample)
+    if len(ru) ==2 & ru[0]==10:
+        #pdb.set_trace()
+        parsed['cruise5'] = sample[:5]
+        parsed['cast'] = sample[5:8]
+        parsed['niskin']= sample[8:10]        
+        parsed['New_Bottle_ID'] = sample[:10]
+        parsed['otherInfo'] = sample[ru[0]+1:]
+        if '18S' in parsed['otherInfo']:
+            parsed['seqType'] = 'V4_18s'
+        elif '16S_V1V2' in parsed['otherInfo']:
+            parsed['seqType'] = 'V1V2'
+    elif (len(ru) ==2) & (ru[0] ==5):
+        parsed['cruise5'] = sample[:5]
+        parsed['depth'] = sample[ru[0]+1 : ru[1]]
+        parsed['otherInfo'] = sample[ru[1] + 1:]
+        parsed['New_Bottle_ID'] = None
+            
+    parsed = pd.DataFrame([parsed]) 
+    return parsed
+
 def load_discrete_info(data_dir,fName):
     print('Loading discrete sample information')
     #data_dir = 'test_data/'
@@ -188,6 +226,167 @@ def load_V1V2_sequencing_info(data_dir,fName):
     
     session.commit()
 
+def riNCBIonline(data_dir,fName):
+    # base_dir = 'd:/dropbox/github_niskin/SargassoDB/'
+    # data_dir = 'test_data/'
+    # fName = 'biosample_result.xml'
+    tree = ET.parse(os.path.join(data_dir,fName))
+    root = tree.getroot()
+
+    parsed_records = []
+    for biosample in root.findall(".//BioSample"):
+        sample_id = biosample.attrib.get("id")
+
+        # Initialize variables for this sample
+        sample_name = None
+        biosample_accession = None
+        sra_id = None
+
+        # Loop over the IDs section
+        for id_tag in biosample.findall(".//Ids/Id"):
+            db_type = id_tag.attrib.get("db")
+            db_label = id_tag.attrib.get("db_label")
+            is_primary = id_tag.attrib.get("is_primary")
+
+            # pull what I need
+            if db_label == "Sample name":
+                sample_name = id_tag.text
+
+            elif db_type == "BioSample" and is_primary == "1": #begins SAMN... this is the sample number
+                biosample_accession = id_tag.text
+
+            elif db_type == "SRA": #begins SRS...this is the sequence id
+                sra = id_tag.text
+
+        # Pull target keys out of the <Attributes> block
+        for attr in biosample.findall(".//Attributes/Attribute"):
+            attr_name = attr.attrib.get("attribute_name")
+            if attr_name == "collection_date":
+                collection_date = attr.text
+            elif attr_name == "depth":
+                depth = attr.text
+            elif attr_name == "temperature":
+                temp = attr.text
+            elif attr_name == "salinity":
+                sal = attr.text
+
+        # Get submitter information (will be useful in house)
+        contact_node = biosample.find(".//Owner/Contacts/Contact/Name")
+        if contact_node is not None:
+            first_node = contact_node.find("First")
+            last_node = contact_node.find("Last")
+
+            first_name = first_node.text if first_node is not None else ""
+            last_name = last_node.text if last_node is not None else ""
+            contact_name = f"{first_name} {last_name}".strip()
+
+        # Append collected data to our list
+        parsed_records.append({
+            "id": sample_id,
+            "biosample": biosample_accession,
+            "sample": sample_name,
+            "dateCollected":collection_date,
+            "depth": depth,
+            "temp":temp,
+            "sal":sal,
+            "sra": sra,
+            "submitter":contact_name
+        })
+
+    dfNCBI = pd.DataFrame(parsed_records)
+    
+    #now ready to put this into the database
+    session = Session()
+    for index,row in tqdm(dfNCBI.iterrows()):
+        db = models.SeqInfoNCBIonline()
+        db.biosample = row['biosample'] 
+        db.sample = row['sample']
+        session.add(db)
+    
+    session.commit()
+    
+    
+def riNCBIinhouse(data_dir,fName):
+    print('Loading NCBI from in-house information')
+    #The project three lists going about infomation at NCBI, read in all three...
+    #in  this case, set the file names in the function as these files are only used once
+    #I need this to get the rest of the NewIDs for the information already at NCBI
+    #fNameLOGncbi = 'BIOS-SCOPE-NCBI_Log_Nov2024.xlsx'
+    dfLOGncbi = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+    #tidy up - make sure New_Bottle_ID is an integer
+    dfLOGncbi['New_Bottle_ID'] = dfLOGncbi['New_Bottle_ID'].astype('Int64')
+        
+    #now ready to put this into the database (use iterrows bc the bulk insert will do some overwriting that I don't like)
+    session = Session()
+    #for index, row in tqdm(dfLOGncbi.iterrows(), total=len(dfLOGncbi)): #use this for progress bar
+    for index, row in tqdm(dfLOGncbi.iterrows()):
+        db = models.SeqInfoNCBIinhouse()
+
+        db.biosample = row['Biosample']
+        db.cruise5 = row['Cruise '] #note the trailing space
+        db.sampleV1V2 = row['Sample name V1V2']
+        db.sraV1V2 = row['SRA_16S_V1V2']
+        db.seqV1V2 = row['V1V2_Sequencing_File']
+        db.sampleV416s = row['Sample name V4']
+        db.sraV416s = row['SRA_16S_V4']
+        db.seqV416s = row['V4_Sequencing_File']
+        db.firstReference = row['Reference (1st used in)']
+        db.bottleID = row['New_Bottle_ID']
+    
+    session.commit()
+    
+def riLTTtableS1(data_dir,fName):
+    print('Loading Table S1 from LTT paper')
+    #Table S1 in the LTT paper has still more information about sequences
+    #fNameTableS1LTT = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
+    dfLTTs1 = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),skiprows=1))
+    #pdb.set_trace()
+    #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
+    dfLTTs1['Sample.ID'] = dfLTTs1['Sample.ID'].astype('Int64')
+    dfLTTs1[['Year','Month','Depth']] = dfLTTs1[['Year','Month','Depth']].astype('Int64')
+    
+    #now ready to put this into the database
+    session = Session()
+    for index, row in tqdm(dfLTTs1.iterrows()):
+        db = models.SeqInfoLTTs1()
+
+        db.biosample = row['BioSample']
+        db.sraV1V2 = row['SRA_16S_V1V2']
+        db.bottleID = row['Sample.ID']
+        db.year = row['Year']
+        db.month = row['Month']
+        db.depth = row['Depth']
+    
+    session.commit()
+    
+def riLTTdeepSeq(data_dir,fName):
+    print('Loading Table S11 on deep sequencing in LTT paper')
+    #Table S11 in the LTT paper has information about the deep sequencing
+    #fNameTableDeep = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
+    dfLTTdeep = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+    #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
+    # pdb.set_trace()
+    dfLTTdeep['Sample.ID'] = dfLTTdeep['Sample.ID'].astype('Int64')
+    dfLTTdeep[['Year','Month','Depth']] = dfLTTdeep[['Year','Month','Depth']].astype('Int64')
+    
+    #now ready to put this into the database
+    session = Session()
+    for index, row in tqdm(dfLTTdeep.iterrows()):
+        db = models.SeqInfoNCBIinhouse()
+        db.sample = row['title']
+        db.bottleID = row['Sample.ID']
+        db.biosample = row['BioSample']
+        db.sraV1V2 = row['SRA_16S_V1V2']
+        db.year = row['Year']
+        db.month = row['Month']
+        db.depth = row['Depth']
+    
+    session.commit()
+
+
+
+                             
+    
 def load_cyverse_info(data_dir,fName):
     #use this to check that I found all I expected
     print('Loading sequencing information')
@@ -357,15 +556,25 @@ if __name__ == "__main__":
     data_dir = 'test_data/'
     fNameSeqLog = 'BIOS-SCOPE DNA Master 2026.07.20.xlsx' 
     fNameCyverse = 'filelist_concatenated.csv'
+    fNameNCBIonline = 'biosample_result.xml'
+    fNameNCBIinhouse = 'BIOS-SCOPE-NCBI_Log_Nov2024.xlsx'
+    fNameTableS1LTT = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
+    fNameLTTdeep = 'LTTpaper/Table_S11_Accession_Deep_Seq.xlsm'
     
     fNameDiscrete = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
     #fNameDiscrete = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
+    
+    load_discrete_info(data_dir,fNameDiscrete)
     
     load_V4_16S_sequencing_info(data_dir,fNameSeqLog)
     load_V4_18S_sequencing_info(data_dir,fNameSeqLog)
     load_V1V2_sequencing_info(data_dir,fNameSeqLog)
     load_cyverse_info(data_dir,fNameCyverse)
-    load_discrete_info(data_dir,fNameDiscrete)
     #load_metabolite_info(data_dir)
     #load_metaboliteUntargeted_info(data_dir)
-    load_sequencing_info(data_dir,fNameSeqLog)
+    #load_sequencing_info(data_dir,fNameSeqLog)
+    
+    riNCBIonline(data_dir,fNameNCBIonline)
+    riNCBIinhouse(data_dir,fNameNCBIinhouse)
+    riLTTtableS1(data_dir,fNameTableS1LTT)
+    riLTTdeepSeq(data_dir,fNameLTTdeep)

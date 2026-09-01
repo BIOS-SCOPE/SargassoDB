@@ -55,7 +55,7 @@ class DiscreteInfo(Base):
     v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship("SeqInfoV4_18S",back_populates="parent_discrete")
     v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship("SeqInfoV1V2",back_populates="parent_discrete")
     
-    #need this next row to get the nice output (otherwise get a generic thing ?: <__main__.DiscreteInfo object at 0x000001A3FC7A0F70>)
+    #need this next row to get the nice output and not generic text
     def __repr__(self):
         return f"<DiscreteInfo(bottleID='{self.bottleID}', cruise='{self.cruise}')>"
 
@@ -113,13 +113,101 @@ class SeqInfoV4_18S(Base):
     V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
     parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_18s_runs")
     
-    # # Back-populate link back to DiscreteInfo
-    # discrete_parent: Mapped[Optional["DiscreteInfo"]] = relationship(back_populates="v4_18s_runs")
-    # #what that does: I can automatically pull the matching sequencing runs for V4_16s data for a specific bottle without writing a new query
-    
     def __repr__(self) -> str:
         return f"SeqInfoV4_18S(id={self.id!r}, name={self.bottleID!r}, V4_18Sdata={self.V4_18Sdata!r})"
         
+
+class SeqInfoNCBIinhouse(Base):
+    __tablename__ = 'SeqInfoNCBIinhouse' #this is the parent for NCBI
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    #join the ncbi child (the online NCBI information) on this next field 
+    biosample: Mapped[str] = mapped_column(String, unique = True, index=True)
+    
+    cruise5: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sampleV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    seqV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sampleV416s: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sraV416s: Mapped[Optional[str]] = mapped_column(String, default=None)
+    seqV416s: Mapped[Optional[str]] = mapped_column(String, default=None)
+    firstReference: Mapped[Optional[str]] = mapped_column(String, default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
+    
+    #this is the parent, define the shortcut to the child
+    child_ncbi: Mapped[list["SeqInfoNCBIonline"]] = relationship(
+        "SeqInfoNCBIonline", 
+        primaryjoin="SeqInfoNCBIonline.biosample== SeqInfoNCBIinhouse.biosample",
+        foreign_keys="[SeqInfoNCBIonline.biosample]",
+        uselist = True,
+        back_populates = 'parent_ncbi'
+    )
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoNCBIonline(id={self.id!r}, sample={self.sample!r}, biosample={self.biosample!r})"
+    
+        
+class SeqInfoNCBIonline(Base):
+    __tablename__ = 'SeqInfoNCBIonline' #this is the child for NCBI
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("SeqInfoNCBIinhouse.biosample"),default=None)
+    sample: Mapped[Optional[str]] = mapped_column(String, default = None)   
+
+    #this should be one-to-one, though I suspect it will not be...let's see what happens; define link to the parent
+    parent_ncbi: Mapped["SeqInfoNCBIinhouse"] = relationship(
+        "SeqInfoNCBIinhouse", 
+        primaryjoin="SeqInfoNCBIonline.biosample == SeqInfoNCBIinhouse.biosample",
+        back_populates="child_ncbi"
+    )
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoNCBIonline(id={self.id!r}, sample={self.sample!r}, biosample={self.biosample!r})"
+    
+    
+
+class SeqInfoLTTs1(Base):
+    __tablename__ = 'SeqInfoLTTs1'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    year: Mapped[Optional[str]] = mapped_column(String, default=None)
+    month: Mapped[Optional[str]] = mapped_column(String, default=None)
+    depth: Mapped[Optional[str]] = mapped_column(String, default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoLTTs1(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
+    
+class SeqInfoLTTdeep(Base):
+    __tablename__ = 'SeqInfoLTTdeep'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    sample: Mapped[Optional[str]] = mapped_column(String, default=None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
+    sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    year: Mapped[Optional[str]] = mapped_column(String, default=None)
+    month: Mapped[Optional[str]] = mapped_column(String, default=None)
+    depth: Mapped[Optional[str]] = mapped_column(String, default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
+    
+    def __repr__(self) -> str:
+        return f"SeqInfoLTTdeep(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 class CyverseInfo(Base):
     __tablename__ = 'cyverse'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
