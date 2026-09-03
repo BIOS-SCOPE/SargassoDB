@@ -120,8 +120,11 @@ class SeqInfoV4_18S(Base):
 class SeqInfoNCBIinhouse(Base):
     __tablename__ = 'SeqInfoNCBIinhouse' #this is the parent for NCBI
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    
     #join the ncbi child (the online NCBI information) on this next field 
-    biosample: Mapped[str] = mapped_column(String, unique = True, index=True)
+    #biosample: Mapped[str] = mapped_column(String, unique = True, index=True) #cannot use, have issues
+    # biosample: Mapped[Optional[str]] = mapped_column(String, nullable=True, default = None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, nullable=True, default = None)
     
     cruise5: Mapped[Optional[str]] = mapped_column(String, default=None)
     sampleV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
@@ -143,7 +146,7 @@ class SeqInfoNCBIinhouse(Base):
     )
     
     def __repr__(self) -> str:
-        return f"SeqInfoNCBIonline(id={self.id!r}, sample={self.sample!r}, biosample={self.biosample!r})"
+        return f"SeqInfoNCBIonline(id={self.id!r}, cruise5={self.cruise5!r})"
     
         
 class SeqInfoNCBIonline(Base):
@@ -191,6 +194,19 @@ class SeqInfoLTTdeep(Base):
     def __repr__(self) -> str:
         return f"SeqInfoLTTdeep(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
     
+class NCBIunreleased(Base):
+    __tablename__ = 'NCBIunreleased'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("SeqInfoNCBIinhouse.biosample"), default=None)
+    sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
+    title: Mapped[Optional[str]] = mapped_column(String, default=None)
+    
+    
+    #the NCBI unreleased will not be in the discrete file as many (all?) are older BATS samples
+    #bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
+    
+    def __repr__(self) -> str:
+        return f"NCBIunreleased(id={self.id!r}, biosample={self.biosample!r})"
     
     
     
