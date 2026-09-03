@@ -113,7 +113,7 @@ def load_discrete_info(data_dir,fName):
 
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.DiscreteInfo()
+        db = models.Discrete()
         db.bottleID = row['New_ID'] 
         db.cruise = row['Cruise_ID']
         db.cast = row['Cast']
@@ -124,7 +124,7 @@ def load_discrete_info(data_dir,fName):
     
     session.commit()
 
-def load_sequencing_info(data_dir,fName):
+def load_seqBasics(data_dir,fName):
     print('Getting general sequencing information')
     #data_dir = 'test_data/'
     #fName = 'V4_dada2_read_info_03052026.xlsx'
@@ -138,7 +138,7 @@ def load_sequencing_info(data_dir,fName):
 
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoBasics()
+        db = models.SeqBasics()
         db.bottleID = row['New_Bottle_ID'] 
         db.sType = row['Type']
         db.location = row['Location']
@@ -169,7 +169,7 @@ def load_V4_18S_sequencing_info(data_dir,fName):
     #pdb.set_trace()
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoV4_18S()
+        db = models.SeqV4_18S()
         db.bottleID = row['New_Bottle_ID'] 
         db.cast = row['Cast']
         db.filename = row['V4_18s_Sequencing_File']           
@@ -197,7 +197,7 @@ def load_V4_16S_sequencing_info(data_dir,fName):
             
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoV4_16S()
+        db = models.SeqV4_16S()
         db.bottleID = row['New_Bottle_ID'] 
         db.cast = row['Cast']
         db.filename = row['V4_16s_Sequencing_File']
@@ -225,10 +225,9 @@ def load_V1V2_sequencing_info(data_dir,fName):
             
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoV1V2()
+        db = models.SeqV1V2()
         db.bottleID = f"{row['New_Bottle_ID']}" #f"{row['Source Name']}"
         db.cast = row['Cast']
-        #pdb.set_trace()
         db.filename = row['V1V2_Sequencing_File']
         db.V1V2data = fName
         session.add(db)
@@ -302,12 +301,12 @@ def riNCBIonline(data_dir,fName):
             "submitter":contact_name
         })
 
-    dfNCBI = pd.DataFrame(parsed_records)
+    df = pd.DataFrame(parsed_records)
     
     #now ready to put this into the database
     session = SessionLocal()
-    for index,row in tqdm(dfNCBI.iterrows()):
-        db = models.SeqInfoNCBIonline()
+    for index,row in tqdm(df.iterrows()):
+        db = models.NCBIonline()
         db.biosample = row['biosample'] 
         db.sample = row['sample']
         session.add(db)
@@ -327,7 +326,7 @@ def riNCBIinhouse(data_dir,fName):
     session = SessionLocal()
     #for index, row in tqdm(dfLOGncbi.iterrows(), total=len(dfLOGncbi)): #use this for progress bar
     for index, row in tqdm(df.iterrows()):
-        db = models.SeqInfoNCBIinhouse()
+        db = models.NCBIinhouse()
 
         db.biosample = changeToNone(row['Biosample'])
         db.cruise5 = row['Cruise '] #note the trailing space
@@ -340,8 +339,6 @@ def riNCBIinhouse(data_dir,fName):
         db.firstReference = row['Reference (1st used in)']
         db.bottleID = changeToNone(row['New_Bottle_ID'])
         session.add(db)
-        # except:
-        #     pdb.set_trace()
     
     session.commit()
     
@@ -349,16 +346,16 @@ def riLTTtableS1(data_dir,fName):
     print('Loading Table S1 from LTT paper')
     #Table S1 in the LTT paper has still more information about sequences
     #fNameTableS1LTT = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
-    dfLTTs1 = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),skiprows=1))
-    #pdb.set_trace()
-    #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
-    dfLTTs1['Sample.ID'] = dfLTTs1['Sample.ID'].astype('Int64')
-    dfLTTs1[['Year','Month','Depth']] = dfLTTs1[['Year','Month','Depth']].astype('Int64')
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),skiprows=1))
+
+    #tidy up - make sure some of these are integers (should I just do that when I map them using class?) 
+    df['Sample.ID'] = df['Sample.ID'].astype('Int64')
+    df[['Year','Month','Depth']] = df[['Year','Month','Depth']].astype('Int64')
     
     #now ready to put this into the database
     session = SessionLocal()
-    for index, row in tqdm(dfLTTs1.iterrows()):
-        db = models.SeqInfoLTTs1()
+    for index, row in tqdm(df.iterrows()):
+        db = models.LTTs1()
 
         db.biosample = row['BioSample']
         db.sraV1V2 = row['SRA_16S_V1V2']
@@ -374,16 +371,16 @@ def riLTTdeepSeq(data_dir,fName):
     print('Loading Table S11 on deep sequencing in LTT paper')
     #Table S11 in the LTT paper has information about the deep sequencing
     #fNameTableDeep = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
-    dfLTTdeep = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
     #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
     # pdb.set_trace()
-    dfLTTdeep['Sample.ID'] = dfLTTdeep['Sample.ID'].astype('Int64')
-    dfLTTdeep[['Year','Month','Depth']] = dfLTTdeep[['Year','Month','Depth']].astype('Int64')
+    df['Sample.ID'] = df['Sample.ID'].astype('Int64')
+    df[['Year','Month','Depth']] = df[['Year','Month','Depth']].astype('Int64')
     
     #now ready to put this into the database
     session = SessionLocal()
     for index, row in tqdm(dfLTTdeep.iterrows()):
-        db = models.SeqInfoNCBIinhouse()
+        db = models.LTTdeep()
         db.sample = row['title']
         db.bottleID = row['Sample.ID']
         db.biosample = row['BioSample']
@@ -398,13 +395,13 @@ def riLTTdeepSeq(data_dir,fName):
 
 def riUnreleased(data_dir,fName):
     print('Loading unreleased data from NCBI')
-    dfUnreleased = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
     #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
     #dfUnreleased['BioSample.name'] = dfUnreleased['BioSample.name'].astype('Int64')
     
     #now ready to put this into the database
     session = SessionLocal()
-    for index, row in tqdm(dfUnreleased.iterrows()):
+    for index, row in tqdm(df.iterrows()):
         db = models.NCBIunreleased()
         db.title = row['Title']
         db.bottleID = row['BioSample.name']
@@ -432,8 +429,10 @@ def load_cyverse_info(data_dir,fName):
         one = row['filename']
         if not pd.isna(one):
             df.loc[index,'filename'] = trimSuffix(one)
-            
-    session = Session()
+      
+    
+    #pdb.set_trace()
+    session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
         db = models.CyverseInfo()
         db.filename = row['filename'] 
@@ -492,7 +491,7 @@ def load_metabolite_info(data_dir):
         df = NewID_inMTBLS.reset_index() 
             
         #put the result into the database           
-        session = Session()
+        session = SessionLocal()
         for index,row in tqdm(df.iterrows()):
             db = models.MetaboliteInfo()
             db.bottleID = f"{row['Source Name']}"
@@ -501,7 +500,7 @@ def load_metabolite_info(data_dir):
         session.commit()
     except:
         print("MetaboLights did not allow connection, dummy data")
-        session = Session()
+        session = SessionLocal()
         #pdb.set_trace()
         df = pd.DataFrame({'bottleID':['1033900707'],'dataSource':['MetaboLightsNotAvailable']})
         for index,row in tqdm(df.iterrows()):
@@ -563,7 +562,7 @@ def load_metaboliteUntargeted_info(data_dir):
         df = NewID_inMTBLS.reset_index() 
         df.columns = ['index','bottleID'] #somehow lost column labels
          
-        session = Session()
+        session = SessionLocal()
         for index,row in tqdm(df.iterrows()):
             db = models.MtabUntargetedInfo()
             db.bottleID = f"{row['bottleID']}" #seems like there should be a btter way to do this
@@ -572,7 +571,7 @@ def load_metaboliteUntargeted_info(data_dir):
         session.commit()
     except:
         print("MetaboLights did not allow connection OR some other error")
-        session = Session()
+        session = SessionLocal()
         #pdb.set_trace()
         df = pd.DataFrame({'bottleID':['1033900707'],'dataSource':['MetaboLightsNotAvailable']})
         for index,row in tqdm(df.iterrows()):
@@ -598,15 +597,18 @@ if __name__ == "__main__":
     fNameDiscrete = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
     #fNameDiscrete = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     
-    #load_discrete_info(data_dir,fNameDiscrete)
+    load_discrete_info(data_dir,fNameDiscrete)
+    load_seqBasics(data_dir,fNameSeqLog)
     
-    #load_V4_16S_sequencing_info(data_dir,fNameSeqLog)
-    #load_V4_18S_sequencing_info(data_dir,fNameSeqLog)
-    #load_V1V2_sequencing_info(data_dir,fNameSeqLog)
-    #load_cyverse_info(data_dir,fNameCyverse)
-    #load_metabolite_info(data_dir)
-    #load_metaboliteUntargeted_info(data_dir)
-    #load_sequencing_info(data_dir,fNameSeqLog)
+    
+    load_V4_16S_sequencing_info(data_dir,fNameSeqLog)
+    load_V4_18S_sequencing_info(data_dir,fNameSeqLog)
+    load_V1V2_sequencing_info(data_dir,fNameSeqLog)
+    
+    load_cyverse_info(data_dir,fNameCyverse)
+    load_metabolite_info(data_dir)
+    load_metaboliteUntargeted_info(data_dir)
+
     
     riNCBIonline(data_dir,fNameNCBIonline)
     riNCBIinhouse(data_dir,fNameNCBIinhouse)

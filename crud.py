@@ -26,21 +26,22 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 # create a session factory
-Session = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine)
 
 
 #reflect the tables so I can work on them
 metadata_obj = MetaData()
 metadata_obj.reflect(bind=engine)
 
-user_seqV4_16S = Table('sequencingV4_16S', metadata_obj, autoload_with=engine)
-user_seqV4_18S = Table('sequencingV4_18S', metadata_obj, autoload_with=engine)
-user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
+user_seqV4_16S = Table('seqV4_16S', metadata_obj, autoload_with=engine)
+user_seqV4_18S = Table('seqV4_18S', metadata_obj, autoload_with=engine)
+user_seqV1V2 = Table('seqV1V2', metadata_obj, autoload_with=engine)
 user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
 user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
 user_cy = Table('cyverse',metadata_obj,autoload_with=engine) 
-user_basics = Table('sequencingBasics',metadata_obj,autoload_with=engine)
+user_basics = Table('seqBasics',metadata_obj,autoload_with=engine)
+
 
 #pdb.set_trace()
 #
@@ -58,6 +59,11 @@ scalar_subq = (
     .scalar_subquery()
 )
 
+#This will break because I am no longer pre-filling discrete with empty columns
+#leave a stop here in case I try this again
+print("I know this will break, see comment in crud.py")
+pdb.set_trace()
+    
 # 2. Use the subquery in the .values() clause of an update statement
 stmt = update(user_discrete).values(extracted=scalar_subq)
 
@@ -71,8 +77,8 @@ with engine.connect() as conn:
 print('linking the V1V2 data')
     
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
@@ -96,8 +102,8 @@ with engine.connect() as conn:
 print('linking the V4_16S data')
 
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 
 # 1. Define the subquery to fetch a value from the second table
@@ -121,8 +127,8 @@ with engine.connect() as conn:
 print('linking the V4_18S data')
 
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 #see all of what is in table (leave query here for future reference, not in use)
 #session.query(SeqInfoV4).all()
@@ -149,8 +155,8 @@ with engine.connect() as conn:
 print('linking the metabolite data')
 
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
@@ -174,8 +180,8 @@ with engine.connect() as conn:
 print('linking the untargeted metabolite data')
 
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 # 1. Define the subquery to fetch a value from the second table
 scalar_subq = (
@@ -200,8 +206,8 @@ with engine.connect() as conn:
 print('check if this all worked')
 
 # Create a session
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 from sqlalchemy import Table, Column, Integer, String, MetaData
 

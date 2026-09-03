@@ -17,7 +17,7 @@ class Base(DeclarativeBase):
     pass
 
 # define the classes  
-class DiscreteInfo(Base):
+class Discrete(Base):
     __tablename__ = 'discrete'
     
     # Primary Key
@@ -47,20 +47,20 @@ class DiscreteInfo(Base):
     # =========================================================================
     # RELATIONSHIPS (think of these as shortcuts in Python)
     # =========================================================================
-    # 1-to-1 relationship with SeqInfoBasics
-    seq_basics: Mapped[Optional["SeqInfoBasics"]] = relationship(back_populates="parent_discrete")
+    # 1-to-1 relationship with SeqBasics
+    seq_basics: Mapped[Optional["SeqBasics"]] = relationship(back_populates="parent_discrete")
     
     # 1-to-Many relationship (Assuming a bottle could have multiple V4 rows): need list to get multiple rows
-    v4_16s_runs: Mapped[list["SeqInfoV4_16S"]] = relationship("SeqInfoV4_16S", back_populates="parent_discrete")   
-    v4_18s_runs: Mapped[list["SeqInfoV4_18S"]] = relationship("SeqInfoV4_18S",back_populates="parent_discrete")
-    v1v2_runs: Mapped[list["SeqInfoV1V2"]] = relationship("SeqInfoV1V2",back_populates="parent_discrete")
+    v4_16s_runs: Mapped[list["SeqV4_16S"]] = relationship("SeqV4_16S", back_populates="parent_discrete")   
+    v4_18s_runs: Mapped[list["SeqV4_18S"]] = relationship("SeqV4_18S",back_populates="parent_discrete")
+    v1v2_runs: Mapped[list["SeqV1V2"]] = relationship("SeqV1V2",back_populates="parent_discrete")
     
     #need this next row to get the nice output and not generic text
     def __repr__(self):
-        return f"<DiscreteInfo(bottleID='{self.bottleID}', cruise='{self.cruise}')>"
+        return f"<Discrete(bottleID='{self.bottleID}', cruise='{self.cruise}')>"
 
-class SeqInfoBasics(Base):
-    __tablename__ = 'sequencingBasics'
+class SeqBasics(Base):
+    __tablename__ = 'seqBasics'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
@@ -71,54 +71,54 @@ class SeqInfoBasics(Base):
     analyst1: Mapped[Optional[str]] = mapped_column(String, default=None)
     
     # Trying this : Back-populate link back to DiscreteInfo
-    parent_discrete: Mapped[Optional["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="seq_basics")
+    parent_discrete: Mapped[Optional["Discrete"]] = relationship("Discrete",back_populates="seq_basics")
     
     def __repr__(self):
-        return f"<SeqInfo_basics(bottleID='{self.bottleID}', extracted='{self.extracted}', Analyst1 ='{self.analyst1}')>"
+        return f"<SeqBasics(bottleID='{self.bottleID}', extracted='{self.extracted}', Analyst1 ='{self.analyst1}')>"
 
-class SeqInfoV4_16S(Base):
-    __tablename__ = 'sequencingV4_16S'
+class SeqV4_16S(Base):
+    __tablename__ = 'seqV4_16S'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_16Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    # set the relationship to DiscreteInfo:
-    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_16s_runs")
+    # set the relationship to Discrete:
+    parent_discrete: Mapped[list["Discrete"]] = relationship("Discrete",back_populates="v4_16s_runs")
 
     def __repr__(self) -> str:
-        return f"SeqInfoV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16Sdata={self.V4_16Sdata!r})"
+        return f"SeqV4_16S(id={self.id!r}, name={self.bottleID!r}, V4_16S={self.V4_16Sdata!r})"
     
-class SeqInfoV1V2(Base):
-    __tablename__ = 'sequencingV1V2'
+class SeqV1V2(Base):
+    __tablename__ = 'seqV1V2'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V1V2data: Mapped[Optional[str]] = mapped_column(String, default=None)
-    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v1v2_runs")
+    parent_discrete: Mapped[list["Discrete"]] = relationship("Discrete",back_populates="v1v2_runs")
     
     def __repr__(self):
-        return f"<SeqInfoV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
+        return f"<SeqV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
 
-class SeqInfoV4_18S(Base):
-    __tablename__ = 'sequencingV4_18S'
+class SeqV4_18S(Base):
+    __tablename__ = 'seqV4_18S'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     bottleID: Mapped[Optional[str]] = mapped_column(String,ForeignKey("discrete.bottleID"), default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     NominalDepth: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     V4_18Sdata: Mapped[Optional[str]] = mapped_column(String, default=None)
-    parent_discrete: Mapped[list["DiscreteInfo"]] = relationship("DiscreteInfo",back_populates="v4_18s_runs")
+    parent_discrete: Mapped[list["Discrete"]] = relationship("Discrete",back_populates="v4_18s_runs")
     
     def __repr__(self) -> str:
-        return f"SeqInfoV4_18S(id={self.id!r}, name={self.bottleID!r}, V4_18Sdata={self.V4_18Sdata!r})"
+        return f"SeqV4_18S(id={self.id!r}, name={self.bottleID!r}, V4_18Sdata={self.V4_18Sdata!r})"
         
 
-class SeqInfoNCBIinhouse(Base):
-    __tablename__ = 'SeqInfoNCBIinhouse' #this is the parent for NCBI
+class NCBIinhouse(Base):
+    __tablename__ = 'NCBIinhouse' #this is the parent for NCBI
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     #join the ncbi child (the online NCBI information) on this next field 
@@ -137,38 +137,38 @@ class SeqInfoNCBIinhouse(Base):
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
     
     #this is the parent, define the shortcut to the child
-    child_ncbi: Mapped[list["SeqInfoNCBIonline"]] = relationship(
-        "SeqInfoNCBIonline", 
-        primaryjoin="SeqInfoNCBIonline.biosample== SeqInfoNCBIinhouse.biosample",
-        foreign_keys="[SeqInfoNCBIonline.biosample]",
+    child_ncbi: Mapped[list["NCBIonline"]] = relationship(
+        "NCBIonline", 
+        primaryjoin="NCBIonline.biosample== NCBIinhouse.biosample",
+        foreign_keys="[NCBIonline.biosample]",
         uselist = True,
         back_populates = 'parent_ncbi'
     )
     
     def __repr__(self) -> str:
-        return f"SeqInfoNCBIonline(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
+        return f"NCBIonline(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
     
         
-class SeqInfoNCBIonline(Base):
-    __tablename__ = 'SeqInfoNCBIonline' #this is the child for NCBI
+class NCBIonline(Base):
+    __tablename__ = 'NCBIonline' #this is the child for NCBI
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("SeqInfoNCBIinhouse.biosample"),default=None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"),default=None)
     sample: Mapped[Optional[str]] = mapped_column(String, default = None)   
 
     #this should be one-to-one, though I suspect it will not be...let's see what happens; define link to the parent
-    parent_ncbi: Mapped["SeqInfoNCBIinhouse"] = relationship(
-        "SeqInfoNCBIinhouse", 
-        primaryjoin="SeqInfoNCBIonline.biosample == SeqInfoNCBIinhouse.biosample",
+    parent_ncbi: Mapped["NCBIinhouse"] = relationship(
+        "NCBIinhouse", 
+        primaryjoin="NCBIonline.biosample == NCBIinhouse.biosample",
         back_populates="child_ncbi"
     )
     
     def __repr__(self) -> str:
-        return f"SeqInfoNCBIonline(id={self.id!r}, biosample={self.biosample!r}, parentNCBIother={self.parent_ncbi!r})"
+        return f"NCBIonline(id={self.id!r}, biosample={self.biosample!r}, parentNCBIother={self.parent_ncbi!r})"
     
     
 
-class SeqInfoLTTs1(Base):
-    __tablename__ = 'SeqInfoLTTs1'
+class LTTs1(Base):
+    __tablename__ = 'LTTs1'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
@@ -178,10 +178,10 @@ class SeqInfoLTTs1(Base):
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
     
     def __repr__(self) -> str:
-        return f"SeqInfoLTTs1(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
+        return f"LTTs1(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
     
-class SeqInfoLTTdeep(Base):
-    __tablename__ = 'SeqInfoLTTdeep'
+class LTTdeep(Base):
+    __tablename__ = 'LTTdeep'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     sample: Mapped[Optional[str]] = mapped_column(String, default=None)
     biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
@@ -192,12 +192,12 @@ class SeqInfoLTTdeep(Base):
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
     
     def __repr__(self) -> str:
-        return f"SeqInfoLTTdeep(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
+        return f"LTTdeep(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
     
 class NCBIunreleased(Base):
     __tablename__ = 'NCBIunreleased'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("SeqInfoNCBIinhouse.biosample"), default=None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"), default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
     title: Mapped[Optional[str]] = mapped_column(String, default=None)
     

@@ -19,7 +19,7 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///test_data/sargasso.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 # create a session factory
-Session = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine)
 
 # create a declarative base
 Base = declarative_base()
@@ -34,17 +34,17 @@ metadata_obj = MetaData()
 metadata_obj.reflect(bind=engine)
 
 #reflect the tables so I can work on them
-user_seqV4_16S = Table('sequencingV4_16S', metadata_obj, autoload_with=engine)
-user_seqV4_18S = Table('sequencingV4_18S', metadata_obj, autoload_with=engine)
-user_seqV1V2 = Table('sequencingV1V2', metadata_obj, autoload_with=engine)
+user_seqV4_16S = Table('seqV4_16S', metadata_obj, autoload_with=engine)
+user_seqV4_18S = Table('seqV4_18S', metadata_obj, autoload_with=engine)
+user_seqV1V2 = Table('seqV1V2', metadata_obj, autoload_with=engine)
 user_cy = Table('cyverse',metadata_obj,autoload_with=engine)
 user_discrete = Table('discrete',metadata_obj,autoload_with=engine)
 user_mtab = Table('metabolites',metadata_obj,autoload_with=engine)
 user_mtabUntargeted = Table('metabolitesUntargeted',metadata_obj,autoload_with=engine)
 
 # create a session factory
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 #session.query(user_discrete).all()
 
@@ -125,8 +125,8 @@ with engine.connect() as conn:
 Base.metadata.create_all(engine)
 
 # Create a session
-Session = sessionmaker(bind=engine)
-session = Session()
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
 
 from sqlalchemy import Table, Column, Integer, String, MetaData
 
