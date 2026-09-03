@@ -27,7 +27,7 @@ Krista Longnecker 30 August 2026
 '''
 
 #start clean: delete existing file and make a new engine
-print('Starting clean: delete database and create a new one') #: may not work if using a Jupyter notebook'
+print('Starting clean: delete database and create a new one') #: will fail if I have opened the data base with a Jupyter notebook'
 data_dir = 'test_data'
 dbName = 'sargasso.db'  
 
