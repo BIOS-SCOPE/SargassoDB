@@ -9,7 +9,7 @@ venv/
 htmlcov/
 .pytest_cache/
 oldFiles/
-notebooks/
+notebooks/ 
 
 # Database (actually in test_data but leave as a reminder)
 # sql_app.db
