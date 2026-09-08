@@ -29,7 +29,15 @@ class Discrete(Base):
     cast: Mapped[str] = mapped_column(String)
     niskin: Mapped[str] = mapped_column(String)
     yyyymmdd: Mapped[str] = mapped_column(String)
-    nominalDepth: Mapped[str] = mapped_column(String)
+    lat: Mapped[str] = mapped_column(String)
+    lon: Mapped[str] = mapped_column(String)
+    depth: Mapped[str] = mapped_column(String)
+    temp: Mapped[str] = mapped_column(String)
+    sal: Mapped[str] = mapped_column(String)
+    oxy: Mapped[str] = mapped_column(String)
+    density: Mapped[str] = mapped_column(String)
+    fluor: Mapped[str] = mapped_column(String)
+                
     
     # # also add in empty columns for the pieces I am adding based on matches (e.g., not just what is in the discrete file)
     # # I think these can be linked from other places and found by query (8/31/2026...working)
@@ -103,6 +111,19 @@ class SeqV1V2(Base):
     def __repr__(self):
         return f"<SeqV1V2(bottleID='{self.bottleID}', filename='{self.filename}', V1V2data ='{self.V1V2data}')>"
 
+class compositeV1V2(Base):
+    __tablename__ = 'compositeV1V2'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"), default=None)
+    cruise: Mapped[Optional[str]] = mapped_column(String, default=None)
+    cast: Mapped[Optional[str]] = mapped_column(String, default=None)
+    niskin: Mapped[Optional[str]] = mapped_column(String, default=None)
+    filename: Mapped[Optional[str]] = mapped_column(String, default=None)
+    
+    def __repr__(self):
+        return f"<SeqV1V2(bottleID='{self.bottleID}', filename='{self.filename}')>"
+
+
 class SeqV4_18S(Base):
     __tablename__ = 'seqV4_18S'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -152,9 +173,22 @@ class NCBIinhouse(Base):
 class NCBIonline(Base):
     __tablename__ = 'NCBIonline' #this is the child for NCBI
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    contact: Mapped[Optional[str]] = mapped_column(String, default = None)   
     biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"),default=None)
     sample: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    sra: Mapped[Optional[str]] = mapped_column(String, default = None)   
 
+    #some environmental parameters available
+    date: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    depth: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    lat: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    lon: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    temp: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    sal: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    fluor: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    density: Mapped[Optional[str]] = mapped_column(String, default = None)   
+    oxy: Mapped[Optional[str]] = mapped_column(String, default = None)   
+            
     #this should be one-to-one, though I suspect it will not be...let's see what happens; define link to the parent
     parent_ncbi: Mapped["NCBIinhouse"] = relationship(
         "NCBIinhouse", 
@@ -170,12 +204,13 @@ class NCBIonline(Base):
 class LTTs1(Base):
     __tablename__ = 'LTTs1'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"),default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
     year: Mapped[Optional[str]] = mapped_column(String, default=None)
     month: Mapped[Optional[str]] = mapped_column(String, default=None)
     depth: Mapped[Optional[str]] = mapped_column(String, default=None)
     bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
+
     
     def __repr__(self) -> str:
         return f"LTTs1(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
@@ -184,7 +219,7 @@ class LTTdeep(Base):
     __tablename__ = 'LTTdeep'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     sample: Mapped[Optional[str]] = mapped_column(String, default=None)
-    biosample: Mapped[Optional[str]] = mapped_column(String, default=None)
+    biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"), default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
     year: Mapped[Optional[str]] = mapped_column(String, default=None)
     month: Mapped[Optional[str]] = mapped_column(String, default=None)
@@ -200,13 +235,14 @@ class NCBIunreleased(Base):
     biosample: Mapped[Optional[str]] = mapped_column(String, ForeignKey("NCBIinhouse.biosample"), default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
     title: Mapped[Optional[str]] = mapped_column(String, default=None)
+    bottleID: Mapped[Optional[str]] = mapped_column(String, default=None)
     
     
     #the NCBI unreleased will not be in the discrete file as many (all?) are older BATS samples
     #bottleID: Mapped[Optional[str]] = mapped_column(String, ForeignKey("discrete.bottleID"),default=None)
     
     def __repr__(self) -> str:
-        return f"NCBIunreleased(id={self.id!r}, biosample={self.biosample!r})"
+        return f"NCBIunreleased(id={self.id!r}, bottleID={self.bottleID!r}, biosample={self.biosample!r})"
     
     
     

@@ -111,6 +111,9 @@ def load_discrete_info(data_dir,fName):
     #fName = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name='DATA'))
 
+    #strip the @#%@#^$ spaces in headers
+    df.columns = df.columns.str.replace(' ','') ## columns can have leading or trailing spaces
+    
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
         db = models.Discrete()
@@ -119,7 +122,14 @@ def load_discrete_info(data_dir,fName):
         db.cast = row['Cast']
         db.niskin = row['Niskin']
         db.yyyymmdd = row['yyyymmdd']
-        db.nominalDepth = row['Nominal_Depth']
+        db.lat = row['latN']
+        db.lon = row['lonW']
+        db.depth = row['Depth']
+        db.temp = row['Temp']
+        db.sal = row['CTD_S']
+        db.oxy = row['O2(umol/kg)'] 
+        db.density = row['sig_theta(kg/m^3)']
+        db.fluor = row['Fluo(RFU)']
         session.add(db)
     
     session.commit()
@@ -234,6 +244,24 @@ def load_V1V2_sequencing_info(data_dir,fName):
     
     session.commit()
 
+def compositeV1V2(data_dir,fName):
+    print('get V1V2 information from composite made by mergeSeq')
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),
+                                        sheet_name = 'details',
+                                        dtype={'New_Bottle_ID':str,'Cruise':str,'Cast':str,'Niskin':str}))  
+
+    session = SessionLocal()
+    for index, row in tqdm(df.iterrows()):
+        db = models.compositeV1V2()
+        db.bottleID = f"{row['New_Bottle_ID']}" #f"{row['Source Name']}"
+        db.cruise = row['Cruise']
+        db.cast = row['Cast']
+        db.niskin = row['Niskin']
+        db.filename = row['V1V2_Sequencing_File_BATS Archive Samples 1991-2013']
+        session.add(db)
+    
+    session.commit()
+
 def riNCBIonline(data_dir,fName):
     # base_dir = 'd:/dropbox/github_niskin/SargassoDB/'
     # data_dir = 'test_data/'
@@ -269,14 +297,24 @@ def riNCBIonline(data_dir,fName):
         # Pull target keys out of the <Attributes> block
         for attr in biosample.findall(".//Attributes/Attribute"):
             attr_name = attr.attrib.get("attribute_name")
+            #print(attr_name)
             if attr_name == "collection_date":
                 collection_date = attr.text
+            elif attr_name == "lat_lon":
+                lat_lon = attr.text
             elif attr_name == "depth":
                 depth = attr.text
             elif attr_name == "temperature":
                 temp = attr.text
             elif attr_name == "salinity":
-                sal = attr.text
+                salinity = attr.text
+            elif attr_name == "Fluorescence_RFU":
+                Fluorescence_RFU = attr.text
+            elif attr_name == "density":
+                density = attr.text
+            elif attr_name == "dissolved_oxygen":
+                dissolved_oxygen = attr.text
+                        
 
         # Get submitter information (will be useful in house)
         contact_node = biosample.find(".//Owner/Contacts/Contact/Name")
@@ -289,30 +327,64 @@ def riNCBIonline(data_dir,fName):
             contact_name = f"{first_name} {last_name}".strip()
 
         # Append collected data to our list
+        #pdb.set_trace()
         parsed_records.append({
             "id": sample_id,
+            "contact": contact_name,
             "biosample": biosample_accession,
             "sample": sample_name,
-            "dateCollected":collection_date,
+            "date":collection_date,
+            "lat_lon": lat_lon,
             "depth": depth,
             "temp":temp,
-            "sal":sal,
+            "salinity":salinity,
+            "Fluorescence_RFU":Fluorescence_RFU,
+            "density":density,
+            "dissolved_oxygen":dissolved_oxygen,
             "sra": sra,
             "submitter":contact_name
         })
 
     df = pd.DataFrame(parsed_records)
+
+    #need to do some tidying up. Have lat_lon that are 'missing', and split lat_lon to lat and lon
+    df['lat_lon'] = df['lat_lon'].replace('missing', pd.NA)
+    df['lat'] = pd.NA
+    df['lon'] = pd.NA
+    for idx,row in df.iterrows():
+        one = row['lat_lon']
+        if pd.notna(one):                   
+            rr = [m.start() for m in re.finditer(r" ", one)]
+            df.at[idx,'lat'] = one[:rr[0]]
+            df.at[idx,'lon'] = one[rr[1]+1 : rr[2]]
+            del(rr)
+        else:
+            df.loc[idx,['lat','lon']] = pd.NA     
+        del(one)
     
     #now ready to put this into the database
     session = SessionLocal()
     for index,row in tqdm(df.iterrows()):
         db = models.NCBIonline()
+        db.contact = row['contact']
         db.biosample = row['biosample'] 
         db.sample = row['sample']
+        db.sra = row['sra']
+        #environmental parameters as submitted
+        db.date = row['date']
+        db.depth = row['depth']
+        db.lat = row['lat']
+        db.lon = row['lon']
+        db.temp = row['temp']
+        db.sal = row['salinity']
+        db.fluor = row['Fluorescence_RFU']
+        db.density = row['density']
+        db.oxy = row['dissolved_oxygen']
+
         session.add(db)
     
     session.commit()
-    
+
     
 def riNCBIinhouse(data_dir,fName):
     print('Loading NCBI from in-house information')
@@ -327,7 +399,6 @@ def riNCBIinhouse(data_dir,fName):
     #for index, row in tqdm(dfLOGncbi.iterrows(), total=len(dfLOGncbi)): #use this for progress bar
     for index, row in tqdm(df.iterrows()):
         db = models.NCBIinhouse()
-
         db.biosample = changeToNone(row['Biosample'])
         db.cruise5 = row['Cruise '] #note the trailing space
         db.sampleV1V2 = row['Sample name V1V2']
@@ -345,51 +416,54 @@ def riNCBIinhouse(data_dir,fName):
 def riLTTtableS1(data_dir,fName):
     print('Loading Table S1 from LTT paper')
     #Table S1 in the LTT paper has still more information about sequences
-    #fNameTableS1LTT = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
-    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),skiprows=1))
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name='Table-S1-A', skiprows=1))
 
     #tidy up - make sure some of these are integers (should I just do that when I map them using class?) 
+    df['Sample.ID'] = df['Sample.ID'].astype('Int64')
+    df[['Year','Month','Depth']] = df[['Year','Month','Depth']].astype('Int64')
+
+    #find rows that have '/' in BioSample, find them, split, and then 'explode'
+    # ...probably need to add a flag so I remember what I did
+    df['BioSample'] = df['BioSample'].str.split('/')
+    #this next step makes a list (note round parentheses), and then explodes to make two rows, one for each BioSample
+    df = df.explode('BioSample').reset_index(drop=True)
+
+    #now ready to put this into the database
+    session = SessionLocal()
+    for index, row in tqdm(df.iterrows()):
+        if pd.notna(row['Sample.ID']):
+            db = models.LTTs1()
+            db.biosample = row['BioSample']
+            db.sraV1V2 = row['SRA_16S_V1V2']
+            db.bottleID = row['Sample.ID']
+            db.year = row['Year']
+            db.month = row['Month']
+            db.depth = row['Depth']
+            session.add(db)
+        
+    session.commit()
+    
+def riLTTdeepSeq(data_dir,fName):
+    print('Loading Table S11 on deep sequencing in LTT paper')
+    #Table S11 in the LTT paper has information about the deep sequencing
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name='Table-S1-B',skiprows=1))
+    #tidy up - make sure some of these are integers (should I just do that when I map them using class? )
     df['Sample.ID'] = df['Sample.ID'].astype('Int64')
     df[['Year','Month','Depth']] = df[['Year','Month','Depth']].astype('Int64')
     
     #now ready to put this into the database
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
-        db = models.LTTs1()
-
-        db.biosample = row['BioSample']
-        db.sraV1V2 = row['SRA_16S_V1V2']
-        db.bottleID = row['Sample.ID']
-        db.year = row['Year']
-        db.month = row['Month']
-        db.depth = row['Depth']
-        session.add(db)
-    
-    session.commit()
-    
-def riLTTdeepSeq(data_dir,fName):
-    print('Loading Table S11 on deep sequencing in LTT paper')
-    #Table S11 in the LTT paper has information about the deep sequencing
-    #fNameTableDeep = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
-    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
-    #tidy up - make sure some of these are integers (should I just do that when I map them using class? 
-    # pdb.set_trace()
-    df['Sample.ID'] = df['Sample.ID'].astype('Int64')
-    df[['Year','Month','Depth']] = df[['Year','Month','Depth']].astype('Int64')
-    
-    #now ready to put this into the database
-    session = SessionLocal()
-    for index, row in tqdm(dfLTTdeep.iterrows()):
-        db = models.LTTdeep()
-        db.sample = row['title']
-        db.bottleID = row['Sample.ID']
-        db.biosample = row['BioSample']
-        db.sraV1V2 = row['SRA_16S_V1V2']
-        db.year = row['Year']
-        db.month = row['Month']
-        db.depth = row['Depth']
-        session.add(db)
-    
+        if pd.notna(row['title']):
+            db = models.LTTdeep()
+            db.sample = row['title']
+            db.bottleID = row['Sample.ID']
+            db.biosample = row['BioSample']
+            db.sraV1V2 = row['SRA_16S_V1V2']
+            db.year = row['Year']
+            db.month = row['Month']
+            db.depth = row['Depth']
+            session.add(db)  
     session.commit()
 
 
@@ -402,6 +476,7 @@ def riUnreleased(data_dir,fName):
     #now ready to put this into the database
     session = SessionLocal()
     for index, row in tqdm(df.iterrows()):
+        #pdb.set_trace()
         db = models.NCBIunreleased()
         db.title = row['Title']
         db.bottleID = row['BioSample.name']
@@ -590,28 +665,32 @@ if __name__ == "__main__":
     fNameCyverse = 'filelist_concatenated.csv'
     fNameNCBIonline = 'biosample_result.xml'
     fNameNCBIinhouse = 'BIOS-SCOPE-NCBI_Log_Nov2024.xlsx'
-    fNameTableS1LTT = 'LTTpaper/Table_S1_Accession_SampleID_numbers.xlsx'
-    fNameLTTdeep = 'LTTpaper/Table_S11_Accession_Deep_Seq.xlsm'
+    fNameTableS1LTT = 'LTTpaper/Table_S1_ASV_List.xlsx'
+    fNameLTTdeep = fNameTableS1LTT #same, now just a different sheet
     fNameUnreleased = 'NCBIunreleased.xlsx'
+    fNameV1V2 = 'mergeSeq/v1v2_issues_withQuestions.2026.08.19.xlsx'
+
     
-    fNameDiscrete = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
-    #fNameDiscrete = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
+    #fNameDiscrete = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
+    fNameDiscrete = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     
     load_discrete_info(data_dir,fNameDiscrete)
     load_seqBasics(data_dir,fNameSeqLog)
+    compositeV1V2(data_dir,fNameV1V2)
     
     
-    load_V4_16S_sequencing_info(data_dir,fNameSeqLog)
-    load_V4_18S_sequencing_info(data_dir,fNameSeqLog)
-    load_V1V2_sequencing_info(data_dir,fNameSeqLog)
+    #load_V4_16S_sequencing_info(data_dir,fNameSeqLog)
+    #load_V4_18S_sequencing_info(data_dir,fNameSeqLog)
+    #load_V1V2_sequencing_info(data_dir,fNameSeqLog)
     
-    load_cyverse_info(data_dir,fNameCyverse)
-    load_metabolite_info(data_dir)
-    load_metaboliteUntargeted_info(data_dir)
+    #load_cyverse_info(data_dir,fNameCyverse)
+    #load_metabolite_info(data_dir)
+    #load_metaboliteUntargeted_info(data_dir)
 
     
     riNCBIonline(data_dir,fNameNCBIonline)
+    
+    riLTTtableS1(data_dir,fNameTableS1LTT)
     riNCBIinhouse(data_dir,fNameNCBIinhouse)
-    #riLTTtableS1(data_dir,fNameTableS1LTT)
-    #riLTTdeepSeq(data_dir,fNameLTTdeep)
-    #riUnreleased(data_dir,fNameUnreleased)
+    riLTTdeepSeq(data_dir,fNameLTTdeep)
+    riUnreleased(data_dir,fNameUnreleased)
