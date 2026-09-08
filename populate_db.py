@@ -348,9 +348,9 @@ def riNCBIonline(data_dir,fName):
     df = pd.DataFrame(parsed_records)
 
     #need to do some tidying up. Have lat_lon that are 'missing', and split lat_lon to lat and lon
-    df['lat_lon'] = df['lat_lon'].replace('missing', pd.NA)
-    df['lat'] = pd.NA
-    df['lon'] = pd.NA
+    df['lat_lon'] = df['lat_lon'].replace('missing', None)
+    df['lat'] = None
+    df['lon'] = None
     for idx,row in df.iterrows():
         one = row['lat_lon']
         if pd.notna(one):                   
@@ -359,7 +359,7 @@ def riNCBIonline(data_dir,fName):
             df.at[idx,'lon'] = one[rr[1]+1 : rr[2]]
             del(rr)
         else:
-            df.loc[idx,['lat','lon']] = pd.NA     
+            df.loc[idx,['lat','lon']] = None 
         del(one)
     
     #now ready to put this into the database
