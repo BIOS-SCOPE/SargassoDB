@@ -20,6 +20,7 @@ The spreadsheet with a summary of available data on Google Drive at: BIOS_SCOPE_
 - [ ] Update environmental parameters at NCBI to reflect data in Discrete datafile
 - [ ] Next: check sequences and biosample matches
 - [ ] Update composite after rerunning mergeSeq as that will be useful to update sequences
+- [ ] Be stricter - have multiple things listed as one-to-many that actually should be one-to-one
 
 ## 28 August 2026
 Tidying up GitHub and removed some deadend branches.
