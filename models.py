@@ -118,6 +118,9 @@ class compositeV1V2(Base):
     cruise: Mapped[Optional[str]] = mapped_column(String, default=None)
     cast: Mapped[Optional[str]] = mapped_column(String, default=None)
     niskin: Mapped[Optional[str]] = mapped_column(String, default=None)
+    year: Mapped[Optional[str]] = mapped_column(String, default=None)
+    month: Mapped[Optional[str]] = mapped_column(String, default=None)
+    day: Mapped[Optional[str]] = mapped_column(String, default=None)
     filename: Mapped[Optional[str]] = mapped_column(String, default=None)
     
     def __repr__(self):
@@ -143,10 +146,7 @@ class NCBIinhouse(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     #join the ncbi child (the online NCBI information) on this next field 
-    #biosample: Mapped[str] = mapped_column(String, unique = True, index=True) #cannot use, have issues
-    # biosample: Mapped[Optional[str]] = mapped_column(String, nullable=True, default = None)
-    biosample: Mapped[Optional[str]] = mapped_column(String, nullable=True, default = None)
-    
+    biosample: Mapped[Optional[str]] = mapped_column(String, nullable=True, default = None)   
     cruise5: Mapped[Optional[str]] = mapped_column(String, default=None)
     sampleV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)
     sraV1V2: Mapped[Optional[str]] = mapped_column(String, default=None)

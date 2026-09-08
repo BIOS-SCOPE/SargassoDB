@@ -12,7 +12,14 @@ BIOS-SCOPE has been collecting data for ten years and needs a database to merge 
 The schema (work in progress) is [here](https://github.com/BIOS-SCOPE/SargassoDB/blob/main/schema.md): easier to visualize this is made by mermaid after exporting from SQL to ER diagram website or:
 ![Entity Relationship Diagram](schema.png)
 
+Using this website to make the ERD diagrams: https://sqltoerdiagram.com
+
 The spreadsheet with a summary of available data on Google Drive at: BIOS_SCOPE_Team/1.0 DATA/Datasets/BIOSSCOPE_availableData.2026.04.06.csv
+
+## 8 September 2026
+- [ ] Update environmental parameters at NCBI to reflect data in Discrete datafile
+- [ ] Next: check sequences and biosample matches
+- [ ] Update composite after rerunning mergeSeq as that will be useful to update sequences
 
 ## 28 August 2026
 Tidying up GitHub and removed some deadend branches.

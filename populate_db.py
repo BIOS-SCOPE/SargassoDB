@@ -257,6 +257,9 @@ def compositeV1V2(data_dir,fName):
         db.cruise = row['Cruise']
         db.cast = row['Cast']
         db.niskin = row['Niskin']
+        db.year = row['Year']
+        db.month = row['Month']
+        db.day = row['Day']
         db.filename = row['V1V2_Sequencing_File_BATS Archive Samples 1991-2013']
         session.add(db)
     
@@ -390,17 +393,18 @@ def riNCBIinhouse(data_dir,fName):
     print('Loading NCBI from in-house information')
     #This is the BIOS-SCOPE list (from Google) one what is at NCBI
     #fNameLOGncbi = 'BIOS-SCOPE-NCBI_Log_Nov2024.xlsx'
-    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName)))
+    df = pd.DataFrame(pd.read_excel(os.path.join(data_dir,fName),sheet_name = 'Sheet1'))
     #tidy up - make sure New_Bottle_ID is an integer
     df['New_Bottle_ID'] = df['New_Bottle_ID'].astype('Int64')
-           
+
     #now ready to put this into the database (use iterrows bc the bulk insert will do some overwriting that I don't like)
     session = SessionLocal()
     #for index, row in tqdm(dfLOGncbi.iterrows(), total=len(dfLOGncbi)): #use this for progress bar
     for index, row in tqdm(df.iterrows()):
         db = models.NCBIinhouse()
         db.biosample = changeToNone(row['Biosample'])
-        db.cruise5 = row['Cruise '] #note the trailing space
+        db.cruise5 = row['Cruise '] #note the trailing space...
+        # db.nominalDepth = row['Depths']
         db.sampleV1V2 = row['Sample name V1V2']
         db.sraV1V2 = row['SRA_16S_V1V2']
         db.seqV1V2 = row['V1V2_Sequencing_File']
@@ -664,13 +668,12 @@ if __name__ == "__main__":
     fNameSeqLog = 'BIOS-SCOPE DNA Master 2026.07.20.xlsx' 
     fNameCyverse = 'filelist_concatenated.csv'
     fNameNCBIonline = 'biosample_result.xml'
-    fNameNCBIinhouse = 'BIOS-SCOPE-NCBI_Log_Nov2024.xlsx'
+    fNameNCBIinhouse = 'BIOS-SCOPE-NCBI_Log_Sept2026.xlsx'
     fNameTableS1LTT = 'LTTpaper/Table_S1_ASV_List.xlsx'
     fNameLTTdeep = fNameTableS1LTT #same, now just a different sheet
     fNameUnreleased = 'NCBIunreleased.xlsx'
-    fNameV1V2 = 'mergeSeq/v1v2_issues_withQuestions.2026.08.19.xlsx'
-
-    
+    fNameV1V2 = 'mergeSeq/v1v2_issues_withQuestions.2026.09.08.xlsx'
+  
     #fNameDiscrete = 'BATS_BS_COMBINED_MASTER_mini.xlsx' #use mini for testing
     fNameDiscrete = 'BATS_BS_COMBINED_MASTER_latest.xlsx'
     
